@@ -1,88 +1,106 @@
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>klist get impala master-vm-cdp01-uat-app-387066.hodomain.local
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>mvn exec:java -Dexec.mainClass="com.cib.impalaStressTester.ImpalaStressTester"
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
+[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
 
-Usage: klist [[-c] [-f] [-e] [-a [-n]]] [-k [-t] [-K]] [name]
-   name  name of credentials cache or  keytab with the prefix. File-based cache or keytab's prefix is FILE:.
-   -c specifies that credential cache is to be listed
-   -k specifies that key tab is to be listed
-   options for credentials caches:
-        -f       shows credentials flags
-        -e       shows the encryption type
-        -a       shows addresses
-          -n       do not reverse-resolve addresses
-   options for keytabs:
-        -t       shows keytab entry timestamps
-        -K       shows keytab entry key value
-        -e       shows keytab entry key type
+[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
+[INFO]
+[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
+========================================
+NEW IMPALA SERVICE LOADED
+JDBC URL = jdbc:impala://cdp-p-wrkr2.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=1;KrbRealm=HODOMAIN.LOCAL;KrbHostFQDN=cdp-p-wrkr2.hodomain.local;KrbServiceName=impala;KrbPrincipal=moba42876@HODOMAIN.LOCAL;KrbKeytabFile=D:/ImpalaStressTester/StressTester/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab;SSL=1;SSLTrustStore=D:/ImpalaStressTester/StressTester/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
+========================================
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
+SLF4J: Ignoring binding found at [jar:file:/C:/Users/MOBA42876/.m2/repository/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+[WARNING]
+com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500182) Could not connect to cdp-p-wrkr2.hodomain.local on port 21050.
+    at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException (HikariPool.java:596)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:582)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:62)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:829)
+Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500182) Could not connect to cdp-p-wrkr2.hodomain.local on port 21050.
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.getClientSocket (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500182) Could not connect to cdp-p-wrkr2.hodomain.local on port 21050.
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.getClientSocket (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: java.net.ConnectException: Connection refused: connect
+    at java.net.PlainSocketImpl.connect0 (Native Method)
+    at java.net.PlainSocketImpl.socketConnect (PlainSocketImpl.java:101)
+    at java.net.AbstractPlainSocketImpl.doConnect (AbstractPlainSocketImpl.java:412)
+    at java.net.AbstractPlainSocketImpl.connectToAddress (AbstractPlainSocketImpl.java:255)
+    at java.net.AbstractPlainSocketImpl.connect (AbstractPlainSocketImpl.java:237)
+    at java.net.SocksSocketImpl.connect (SocksSocketImpl.java:392)
+    at java.net.Socket.connect (Socket.java:609)
+    at sun.security.ssl.SSLSocketImpl.connect (SSLSocketImpl.java:305)
+    at sun.security.ssl.SSLSocketImpl.<init> (SSLSocketImpl.java:164)
+    at sun.security.ssl.SSLSocketFactoryImpl.createSocket (SSLSocketFactoryImpl.java:88)
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.TETSSLTransportFactory.getClientSocket (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+    at java.lang.Thread.run (Thread.java:829)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.116 s
+[INFO] Finished at: 2026-10-05T14:18:47+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500182) Could not connect to cdp-p-wrkr2.hodomain.local on port 21050.: Connection refused: connect -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>setspn -Q impala master-vm-cdp01-uat-app-387066.hodomain.local
-Unknown parameter master-vm-cdp01-uat-app-387066.hodomain.local.  Please check your usage.
-
-Usage: setspn [modifiers switch] [accountname]
-  Where "accountname" can be the name or domain\name
-  of the target computer or user account
-
-  Edit Mode Switches:
-   -R = reset HOST ServicePrincipalName
-    Usage:   setspn -R accountname
-   -S = add arbitrary SPN after verifying no duplicates exist
-    Usage:   setspn -S SPN accountname
-   -D = delete arbitrary SPN
-    Usage:   setspn -D SPN accountname
-   -L = list SPNs registered to target account
-    Usage:   setspn [-L] accountname
-
-  Edit Mode Modifiers:
-   -C = specify that accountname is a computer account
-   -U = specify that accountname is a user account
-
-    Note: -C and -U are exclusive.  If neither is specified, the tool
-     will interpret accountname as a computer name if such a computer
-     exists, and a user name if it does not.
-
-  Query Mode Switches:
-   -Q = query for existence of SPN
-    Usage:   setspn -Q SPN
-   -X = search for duplicate SPNs
-    Usage:   setspn -X
-
-    Note: searching for duplicates, especially forestwide, can take
-     a long period of time and a large amount of memory.  -Q will execute
-     on each target domain/forest.  -X will return duplicates that exist
-     across all targets. SPNs are not required to be unique across forests,
-     but duplicates can cause authentication issues when authenticating
-     cross-forest.
-
-  Query Mode Modifiers:
-   -P = suppresses progress to the console and can be used when redirecting
-    output to a file or when used in an unattended script.  There will be no
-    output until the command is complete.
-   -F = perform queries at the forest, rather than domain level
-   -T = perform query on the speicified domain or forest (when -F is also used)
-    Usage:   setspn -T domain (switches and other parameters)
-     "" or * can be used to indicate the current domain or forest.
-
-    Note: these modifiers can be used with the -S switch in order to specify
-     where the check for duplicates should be performed before adding the SPN.
-    Note: -T can be specified multiple times.
-
-Examples:
-setspn -R daserver1
-   It will register SPN "HOST/daserver1" and "HOST/{DNS of daserver1}"
-setspn -S http/daserver daserver1
-   It will register SPN "http/daserver" for computer "daserver1"
-    if no such SPN exists in the domain
-setspn -D http/daserver daserver1
-   It will delete SPN "http/daserver" for computer "daserver1"
-setspn -F -S http/daserver daserver1
-   It will register SPN "http/daserver" for computer "daserver1"
-    if no such SPN exists in the forest
-setspn -U -S http/daserver dauser
-   It will register SPN "http/daserver" for user account "dauser"
-    if no such SPN exists in the domain
-setspn -T * -T bar -X
-   It will report all duplicate registration of SPNs in this domain and bar
-setspn -T bar -F -Q */daserver
-   It will find all SPNs of the form */daserver registered in the forest to
-    which bar belongs
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
 
 D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
