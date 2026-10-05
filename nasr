@@ -1,174 +1,15 @@
-INFO] --- clean:3.2.0:clean (default-clean) @ ImpalaStressTesting ---
-Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom
-Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom (5.8 kB at 25 kB/s)
-Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom
-Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom (5.1 kB at 25 kB/s)
-Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom
-Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom (43 kB at 207 kB/s)
-[INFO] Artifact commons-io:commons-io:pom:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-[INFO] Artifact commons-io:commons-io:pom:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom
-Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom (0 B at 0 B/s)
-[INFO] Artifact org.apache.commons:commons-parent:pom:42 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-[INFO] Artifact org.apache.commons:commons-parent:pom:42 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom
-Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom (0 B at 0 B/s)
-[INFO] Artifact commons-io:commons-io:jar:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-[INFO] Artifact commons-io:commons-io:jar:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
-Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar
-Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar (153 kB at 851 kB/s)
-Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar
-Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar (0 B at 0 B/s)
-[INFO] Deleting C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2\target
-[INFO]
-[INFO] --- resources:3.4.0:resources (default-resources) @ ImpalaStressTesting ---
-[INFO] skip non existing resourceDirectory C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2\src\main\resources
-[INFO]
-[INFO] --- compiler:3.15.0:compile (default-compile) @ ImpalaStressTesting ---
-[INFO] Recompiling the module because of changed source code.
-[INFO] Compiling 6 source files with javac [debug target 11] to target\classes
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  11.612 s
-[INFO] Finished at: 2026-10-05T11:14:33+03:00
-[INFO] ------------------------------------------------------------------------
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "master-vm-cdp01-uat-app-387066" *.*
+resources\hbase-site.xml.txt:4:        <value>master-vm-cdp01-uat-app-387066.hodomain.local</value>
+src\main\java\com\cib\impalaStressTester\ImpalaService.java:21:        String jdbcUrl = "master-vm-cdp01-uat-app-387066.hodomain.local";
+target\classes\com\cib\impalaStressTester\ImpalaService.class:23:SourceFile ImpalaService.java P c java.security.krb5.conf JC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/kerb5.ini  java.security.auth.login.config aC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/omab42697_kafka_client_jaas.conf 'javax.security.auth.useSubjectCredsOnly false -master-vm-cdp01-uat-app-387066.hodomain.local ^ _ BootstrapMethods "com/zaxxer/hikari/HikariDataSource com/zaxxer/hikari/HikariConfigAuKrbKeytabFile QC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/omab42697.keytabKrbPrincipal omab42697@HODOMAIN.LOCAL SSLSSLTrustStore MC:/Users/OMAB42697/Downloads/ImpalaStressTester/cm-auto-global_truststore.jks SSLTrustStorePwd
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>mvn exec:java -Dexec.mainClass="com.cib.impalaStressTester.ImpalaStressTester"
-[INFO] Scanning for projects...
-[INFO]
-[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
-[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
-[INFO]   from pom.xml
-[INFO] --------------------------------[ jar ]---------------------------------
-[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
-[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
-[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
-[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066" *. src/main/java/*.java
 
-[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
-[INFO]
-[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
-SLF4J: No SLF4J providers were found.
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
-SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
-SLF4J: Ignoring binding found at [jar:file:/C:/Users/MOBA42876/.m2/repository/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
-SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
-java.util.NoSuchElementException
-        at java.base/java.util.StringTokenizer.nextToken(StringTokenizer.java:349)
-        at com.cloudera.impala.jdbc.common.BaseConnectionFactory.acceptsURL(Unknown Source)
-        at com.cloudera.impala.jdbc.common.AbstractDriver.acceptsURL(Unknown Source)
-        at com.zaxxer.hikari.util.DriverDataSource.<init>(DriverDataSource.java:109)
-        at com.zaxxer.hikari.pool.PoolBase.initializeDataSource(PoolBase.java:331)
-        at com.zaxxer.hikari.pool.PoolBase.<init>(PoolBase.java:114)
-        at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:108)
-        at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81)
-        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:27)
-        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-        at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod(AbstractExecJavaBase.java:402)
-        at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod(ExecJavaMojo.java:142)
-        at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader(AbstractExecJavaBase.java:377)
-        at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0(AbstractExecJavaBase.java:287)
-        at java.base/java.lang.Thread.run(Thread.java:834)
-[WARNING]
-java.lang.RuntimeException: Driver com.cloudera.impala.jdbc41.Driver claims to not accept jdbcUrl, master-vm-cdp01-uat-app-387066.hodomain.local
-    at com.zaxxer.hikari.util.DriverDataSource.<init> (DriverDataSource.java:110)
-    at com.zaxxer.hikari.pool.PoolBase.initializeDataSource (PoolBase.java:331)
-    at com.zaxxer.hikari.pool.PoolBase.<init> (PoolBase.java:114)
-    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:108)
-    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
-    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:27)
-    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
-    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
-    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
-    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
-    at java.lang.reflect.Method.invoke (Method.java:566)
-    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
-    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
-    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
-    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
-    at java.lang.Thread.run (Thread.java:834)
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  4.076 s
-[INFO] Finished at: 2026-10-05T11:14:50+03:00
-[INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Driver com.cloudera.impala.jdbc41.Driver claims to not accept jdbcUrl, master-vm-cdp01-uat-app-387066.hodomain.local -> [Help 1]
-[ERROR]
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR]
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066"  src/main/java/*.java
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066" src/main/java/*.java
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" src/main/java/*.java
+src/main/java/com\cib\impalaStressTester\ImpalaService.java:39:        config.setJdbcUrl(jdbcUrl);
 
 C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
