@@ -1,86 +1,27 @@
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
-> kdestroy
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
-> kinit -V \
-> -kt /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
-> rise37432@TESTHODOMAIN.LOCAL
-Using default cache: /tmp/krb5cc_206621
-Using principal: rise37432@TESTHODOMAIN.LOCAL
-Using keytab: /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab
-Authenticated to Kerberos v5
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ klist
-Ticket cache: FILE:/tmp/krb5cc_206621
-Default principal: rise37432@TESTHODOMAIN.LOCAL
+Client {
+    com.sun.security.auth.module.Krb5LoginModule required
+    useKeyTab=true
+    keyTab="/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab"
+    principal="rise37432@TESTHODOMAIN.LOCAL"
+    storeKey=true
+    doNotPrompt=true
+    useTicketCache=false
+    refreshKrb5Config=true
+    debug=true;
+};
 
-Valid starting       Expires              Service principal
-10/05/2026 15:27:12  10/06/2026 01:27:12  krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL
-        renew until 10/12/2026 15:27:12
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ java -jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar                            ========================================
-NEW IMPALA SERVICE LOADED
-JDBC URL = jdbc:impala://master-vm-cdp01-uat-app-387066.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=1;KrbRealm=TESTHODOMAIN.LOCAL;KrbHostFQDN=master-vm-cdp01-uat-app-387066.hodomain.local;KrbServiceName=impala;KrbPrincipal=rise37432@TESTHODOMAIN.LOCAL;KrbKeytabFile=/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab;SSL=1;SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
-========================================
-SLF4J: No SLF4J providers were found.
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
-SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
-SLF4J: Ignoring binding found at [jar:file:/home/rise37432/ImpalaStressTest/ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar!/org/slf4j/impl/StaticLoggerBinder.class]
-SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
-Debug is  true storeKey true useTicketCache false useKeyTab true doNotPrompt true ticketCache is null isInitiator true KeyTab is /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab refreshKrb5Config is false principal is rise37432@TESTHODOMAIN.LOCAL tryFirstPass is false useFirstPass is false storePass is false clearPass is false
-                [Krb5LoginModule] authentication failed
-Receive timed out
-Exception in thread "main" com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
-        at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException(HikariPool.java:596)
-        at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:582)
-        at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115)
-        at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81)
-        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:62)
-        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
-Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
-        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
-        ... 9 more
-Caused by: javax.security.auth.login.LoginException: Receive timed out
-        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:784)
-        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.login(Krb5LoginModule.java:592)
-        at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:747)
-        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:672)
-        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:670)
-        at java.base/java.security.AccessController.doPrivileged(Native Method)
-        at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:670)
-        at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:581)
-        at com.cloudera.impala.jdbc.kerberos.Kerberos.getSubjectViaJAASConfig(Unknown Source)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
-        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-        at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: java.net.SocketTimeoutException: Receive timed out
-        at java.base/java.net.PlainDatagramSocketImpl.receive0(Native Method)
-        at java.base/java.net.AbstractPlainDatagramSocketImpl.receive(AbstractPlainDatagramSocketImpl.java:200)
-        at java.base/java.net.DatagramSocket.receive(DatagramSocket.java:814)
-        at java.security.jgss/sun.security.krb5.internal.UDPClient.receive(NetClient.java:205)
-        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:409)
-        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:369)
-        at java.base/java.security.AccessController.doPrivileged(Native Method)
-        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:353)
-        at java.security.jgss/sun.security.krb5.KdcComm.sendIfPossible(KdcComm.java:253)
-        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:229)
-        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:200)
-        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.send(KrbAsReqBuilder.java:345)
-        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.action(KrbAsReqBuilder.java:498)
-        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:756)
-        ... 18 more
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$
+
+
+export JDBC_ENABLE_JAAS=1
+
+java \
+-Djava.security.krb5.conf=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
+-Djava.security.auth.login.config=/home/rise37432/ImpalaStressTest/securityConfigs/moba42876_kafka_client_jaas.conf \
+-Dsun.security.krb5.debug=true \
+-jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+
+
+KRB5_TRACE=/dev/stderr \
+KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
+kinit -kt /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
+rise37432@TESTHODOMAIN.LOCAL
