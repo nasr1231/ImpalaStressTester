@@ -1,15 +1,223 @@
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "master-vm-cdp01-uat-app-387066" *.*
-resources\hbase-site.xml.txt:4:        <value>master-vm-cdp01-uat-app-387066.hodomain.local</value>
-src\main\java\com\cib\impalaStressTester\ImpalaService.java:21:        String jdbcUrl = "master-vm-cdp01-uat-app-387066.hodomain.local";
-target\classes\com\cib\impalaStressTester\ImpalaService.class:23:SourceFile ImpalaService.java P c java.security.krb5.conf JC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/kerb5.ini  java.security.auth.login.config aC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/omab42697_kafka_client_jaas.conf 'javax.security.auth.useSubjectCredsOnly false -master-vm-cdp01-uat-app-387066.hodomain.local ^ _ BootstrapMethods "com/zaxxer/hikari/HikariDataSource com/zaxxer/hikari/HikariConfigAuKrbKeytabFile QC:/Users/OMAB42697/Downloads/ImpalaStressTester/secuirityConfigs/omab42697.keytabKrbPrincipal omab42697@HODOMAIN.LOCAL SSLSSLTrustStore MC:/Users/OMAB42697/Downloads/ImpalaStressTester/cm-auto-global_truststore.jks SSLTrustStorePwd
+package com.cib.impalaStressTester;
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066" *. src/main/java/*.java
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066"  src/main/java/*.java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" *.*-uat-app-387066" src/main/java/*.java
+public class ImpalaService {
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>findstr /S /N /I "setJdbcUrl" src/main/java/*.java
-src/main/java/com\cib\impalaStressTester\ImpalaService.java:39:        config.setJdbcUrl(jdbcUrl);
+    private final HikariDataSource readDataSource;
+    private final HikariDataSource writeDataSource;
 
-C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
+    private static final String HOST =
+            "master-vm-cdp01-uat-app-387066.hodomain.local";
+
+    private static final String JDBC_URL =
+            "jdbc:impala://" + HOST + ":21050/DEV_CNSMR_LO" +
+            ";AuthMech=1" +
+            ";KrbAuthType=1" +
+            ";KrbRealm=HODOMAIN.LOCAL" +
+            ";KrbHostFQDN=" + HOST +
+            ";KrbServiceName=impala" +
+            ";KrbPrincipal=omab42697@HODOMAIN.LOCAL" +
+            ";KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab" +
+            ";SSL=1" +
+            ";SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks" +
+            ";SSLTrustStorePwd=CDPEIMPASS" +
+            ";UseNativeQuery=1;";
+
+    public ImpalaService(int workerNodeId) {
+
+        System.setProperty(
+                "java.security.krb5.conf",
+                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini"
+        );
+
+        System.setProperty(
+                "java.security.auth.login.config",
+                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf"
+        );
+
+        System.setProperty(
+                "javax.security.auth.useSubjectCredsOnly",
+                "false"
+        );
+
+        System.out.println("========================================");
+        System.out.println("NEW IMPALA SERVICE LOADED");
+        System.out.println("JDBC URL = " + JDBC_URL);
+        System.out.println("========================================");
+
+        HikariConfig readConfig = createBaseConfig();
+
+        readConfig.setPoolName("HikariPool-Read");
+        readConfig.setMaximumPoolSize(50);
+        readConfig.setConnectionTimeout(10000);
+
+        this.readDataSource =
+                new HikariDataSource(readConfig);
+
+        HikariConfig writeConfig = createBaseConfig();
+
+        writeConfig.setPoolName("HikariPool-Write");
+        writeConfig.setMaximumPoolSize(14);
+        writeConfig.setConnectionTimeout(10000);
+
+        this.writeDataSource =
+                new HikariDataSource(writeConfig);
+    }
+
+    private HikariConfig createBaseConfig() {
+
+        HikariConfig config =
+                new HikariConfig();
+
+        config.setDriverClassName(
+                "com.cloudera.impala.jdbc41.Driver"
+        );
+
+        config.setJdbcUrl(
+                JDBC_URL
+        );
+
+        config.setConnectionTimeout(
+                10000
+        );
+
+        config.setValidationTimeout(
+                5000
+        );
+
+        config.setConnectionTestQuery(
+                "SELECT 1"
+        );
+
+        return config;
+    }
+
+    public void printPoolStatus() {
+
+        HikariPoolMXBean readBean =
+                readDataSource.getHikariPoolMXBean();
+
+        if (readBean != null) {
+
+            System.out.printf(
+                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
+                    readDataSource.getPoolName(),
+                    readBean.getTotalConnections(),
+                    readBean.getActiveConnections(),
+                    readBean.getIdleConnections(),
+                    readBean.getThreadsAwaitingConnection()
+            );
+        }
+
+        HikariPoolMXBean writeBean =
+                writeDataSource.getHikariPoolMXBean();
+
+        if (writeBean != null) {
+
+            System.out.printf(
+                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
+                    writeDataSource.getPoolName(),
+                    writeBean.getTotalConnections(),
+                    writeBean.getActiveConnections(),
+                    writeBean.getIdleConnections(),
+                    writeBean.getThreadsAwaitingConnection()
+            );
+        }
+    }
+
+    public int executeQuery(String rowKey)
+            throws SQLException {
+
+        int rowCount = 0;
+
+        String sql =
+                "SELECT shortname, country, postcode " +
+                "FROM dev_cnsmr_lo.customer_keys " +
+                "WHERE row_key = ?";
+
+        try (
+                Connection conn =
+                        readDataSource.getConnection();
+
+                PreparedStatement stmt =
+                        conn.prepareStatement(sql)
+        ) {
+
+            stmt.setString(1, rowKey);
+
+            try (
+                    ResultSet result =
+                            stmt.executeQuery()
+            ) {
+
+                while (result.next()) {
+                    rowCount++;
+                }
+            }
+        }
+
+        return rowCount;
+    }
+
+    public int executeInsert(String rowKey)
+            throws SQLException {
+
+        String readSql =
+                "SELECT shortname, country, postcode " +
+                "FROM dev_cnsmr_lo.customer_keys " +
+                "WHERE row_key = ?";
+
+        String writeSql =
+                "INSERT INTO dev_cnsmr_lo.customer_keys " +
+                "(row_key, country, postcode) " +
+                "VALUES (?, 'qw_EG', 'qw_11511')";
+
+        try (
+                Connection conn =
+                        writeDataSource.getConnection();
+
+                PreparedStatement readStmt =
+                        conn.prepareStatement(readSql);
+
+                PreparedStatement writeStmt =
+                        conn.prepareStatement(writeSql)
+        ) {
+
+            readStmt.setString(1, rowKey);
+
+            try (
+                    ResultSet result =
+                            readStmt.executeQuery()
+            ) {
+                // execute read
+            }
+
+            writeStmt.setString(1, rowKey);
+
+            return writeStmt.executeUpdate();
+        }
+    }
+
+    public void closeDataSource() {
+
+        if (readDataSource != null &&
+                !readDataSource.isClosed()) {
+
+            readDataSource.close();
+        }
+
+        if (writeDataSource != null &&
+                !writeDataSource.isClosed()) {
+
+            writeDataSource.close();
+        }
+    }
+}
