@@ -1,223 +1,105 @@
-package com.cib.impalaStressTester;
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>mvn exec:java -Dexec.mainClass="com.cib.impalaStressTester.ImpalaStressTester"
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
+[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariPoolMXBean;
+[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
+[INFO]
+[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
+========================================
+NEW IMPALA SERVICE LOADED
+JDBC URL = jdbc:impala://master-vm-cdp01-uat-app-387066.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=1;KrbRealm=HODOMAIN.LOCAL;KrbHostFQDN=master-vm-cdp01-uat-app-387066.hodomain.local;KrbServiceName=impala;KrbPrincipal=moba42876@HODOMAIN.LOCAL;KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab;SSL=1;SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
+========================================
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
+SLF4J: Ignoring binding found at [jar:file:/C:/Users/MOBA42876/.m2/repository/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+[WARNING]
+com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](700100) Connection timeout expired. Details: None.
+    at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException (HikariPool.java:596)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:582)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:62)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](700100) Connection timeout expired. Details: None.
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection.handleException (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.handleException (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection.connect (Unknown Source)
+    at com.cloudera.impala.jdbc.common.BaseConnectionFactory.doConnect (Unknown Source)
+    at com.cloudera.impala.jdbc.common.AbstractDriver.connect (Unknown Source)
+    at com.zaxxer.hikari.util.DriverDataSource.getConnection (DriverDataSource.java:121)
+    at com.zaxxer.hikari.pool.PoolBase.newConnection (PoolBase.java:364)
+    at com.zaxxer.hikari.pool.PoolBase.newPoolEntry (PoolBase.java:206)
+    at com.zaxxer.hikari.pool.HikariPool.createPoolEntry (HikariPool.java:476)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:561)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:62)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: com.cloudera.impala.support.exceptions.ErrorException: [Cloudera][ImpalaJDBCDriver](700100) Connection timeout expired. Details: None.
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection.handleException (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.handleException (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection.connect (Unknown Source)
+    at com.cloudera.impala.jdbc.common.BaseConnectionFactory.doConnect (Unknown Source)
+    at com.cloudera.impala.jdbc.common.AbstractDriver.connect (Unknown Source)
+    at com.zaxxer.hikari.util.DriverDataSource.getConnection (DriverDataSource.java:121)
+    at com.zaxxer.hikari.pool.PoolBase.newConnection (PoolBase.java:364)
+    at com.zaxxer.hikari.pool.PoolBase.newPoolEntry (PoolBase.java:206)
+    at com.zaxxer.hikari.pool.HikariPool.createPoolEntry (HikariPool.java:476)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:561)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:62)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  25.681 s
+[INFO] Finished at: 2026-10-05T11:35:20+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](700100) Connection timeout expired. Details: None. -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class ImpalaService {
-
-    private final HikariDataSource readDataSource;
-    private final HikariDataSource writeDataSource;
-
-    private static final String HOST =
-            "master-vm-cdp01-uat-app-387066.hodomain.local";
-
-    private static final String JDBC_URL =
-            "jdbc:impala://" + HOST + ":21050/DEV_CNSMR_LO" +
-            ";AuthMech=1" +
-            ";KrbAuthType=1" +
-            ";KrbRealm=HODOMAIN.LOCAL" +
-            ";KrbHostFQDN=" + HOST +
-            ";KrbServiceName=impala" +
-            ";KrbPrincipal=omab42697@HODOMAIN.LOCAL" +
-            ";KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab" +
-            ";SSL=1" +
-            ";SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks" +
-            ";SSLTrustStorePwd=CDPEIMPASS" +
-            ";UseNativeQuery=1;";
-
-    public ImpalaService(int workerNodeId) {
-
-        System.setProperty(
-                "java.security.krb5.conf",
-                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini"
-        );
-
-        System.setProperty(
-                "java.security.auth.login.config",
-                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf"
-        );
-
-        System.setProperty(
-                "javax.security.auth.useSubjectCredsOnly",
-                "false"
-        );
-
-        System.out.println("========================================");
-        System.out.println("NEW IMPALA SERVICE LOADED");
-        System.out.println("JDBC URL = " + JDBC_URL);
-        System.out.println("========================================");
-
-        HikariConfig readConfig = createBaseConfig();
-
-        readConfig.setPoolName("HikariPool-Read");
-        readConfig.setMaximumPoolSize(50);
-        readConfig.setConnectionTimeout(10000);
-
-        this.readDataSource =
-                new HikariDataSource(readConfig);
-
-        HikariConfig writeConfig = createBaseConfig();
-
-        writeConfig.setPoolName("HikariPool-Write");
-        writeConfig.setMaximumPoolSize(14);
-        writeConfig.setConnectionTimeout(10000);
-
-        this.writeDataSource =
-                new HikariDataSource(writeConfig);
-    }
-
-    private HikariConfig createBaseConfig() {
-
-        HikariConfig config =
-                new HikariConfig();
-
-        config.setDriverClassName(
-                "com.cloudera.impala.jdbc41.Driver"
-        );
-
-        config.setJdbcUrl(
-                JDBC_URL
-        );
-
-        config.setConnectionTimeout(
-                10000
-        );
-
-        config.setValidationTimeout(
-                5000
-        );
-
-        config.setConnectionTestQuery(
-                "SELECT 1"
-        );
-
-        return config;
-    }
-
-    public void printPoolStatus() {
-
-        HikariPoolMXBean readBean =
-                readDataSource.getHikariPoolMXBean();
-
-        if (readBean != null) {
-
-            System.out.printf(
-                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
-                    readDataSource.getPoolName(),
-                    readBean.getTotalConnections(),
-                    readBean.getActiveConnections(),
-                    readBean.getIdleConnections(),
-                    readBean.getThreadsAwaitingConnection()
-            );
-        }
-
-        HikariPoolMXBean writeBean =
-                writeDataSource.getHikariPoolMXBean();
-
-        if (writeBean != null) {
-
-            System.out.printf(
-                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
-                    writeDataSource.getPoolName(),
-                    writeBean.getTotalConnections(),
-                    writeBean.getActiveConnections(),
-                    writeBean.getIdleConnections(),
-                    writeBean.getThreadsAwaitingConnection()
-            );
-        }
-    }
-
-    public int executeQuery(String rowKey)
-            throws SQLException {
-
-        int rowCount = 0;
-
-        String sql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        try (
-                Connection conn =
-                        readDataSource.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
-        ) {
-
-            stmt.setString(1, rowKey);
-
-            try (
-                    ResultSet result =
-                            stmt.executeQuery()
-            ) {
-
-                while (result.next()) {
-                    rowCount++;
-                }
-            }
-        }
-
-        return rowCount;
-    }
-
-    public int executeInsert(String rowKey)
-            throws SQLException {
-
-        String readSql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        String writeSql =
-                "INSERT INTO dev_cnsmr_lo.customer_keys " +
-                "(row_key, country, postcode) " +
-                "VALUES (?, 'qw_EG', 'qw_11511')";
-
-        try (
-                Connection conn =
-                        writeDataSource.getConnection();
-
-                PreparedStatement readStmt =
-                        conn.prepareStatement(readSql);
-
-                PreparedStatement writeStmt =
-                        conn.prepareStatement(writeSql)
-        ) {
-
-            readStmt.setString(1, rowKey);
-
-            try (
-                    ResultSet result =
-                            readStmt.executeQuery()
-            ) {
-                // execute read
-            }
-
-            writeStmt.setString(1, rowKey);
-
-            return writeStmt.executeUpdate();
-        }
-    }
-
-    public void closeDataSource() {
-
-        if (readDataSource != null &&
-                !readDataSource.isClosed()) {
-
-            readDataSource.close();
-        }
-
-        if (writeDataSource != null &&
-                !writeDataSource.isClosed()) {
-
-            writeDataSource.close();
-        }
-    }
-}
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
