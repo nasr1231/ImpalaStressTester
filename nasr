@@ -1,375 +1,174 @@
-package com.cib.impalaStressTester;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariPoolMXBean;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class ImpalaService {
-
-    private static final String KRB5_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini";
-
-    private static final String JAAS_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf";
-
-    private static final String KEYTAB_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab";
-
-    private static final String TRUSTSTORE_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks";
-
-    private static final String TRUSTSTORE_PASSWORD = "CDPEIMPASS";
-
-    private static final String KERBEROS_REALM = "HODOMAIN.LOCAL";
-
-    /*
-     * IMPORTANT:
-     * Make sure this principal actually exists inside moba42876.keytab.
-     *
-     * Check with:
-     * klist -k -t -K moba42876.keytab
-     */
-    private static final String KERBEROS_PRINCIPAL =
-            "omab42697@HODOMAIN.LOCAL";
-
-    private static final String IMPALA_DATABASE = "DEV_CNSMR_LO";
-    private static final int IMPALA_PORT = 21050;
-
-    private final HikariDataSource readDataSource;
-    private final HikariDataSource writeDataSource;
-
-    public ImpalaService(int workerNodeId) {
-
-        // ---------------------------------------------------------
-        // JVM Kerberos configuration
-        // ---------------------------------------------------------
-        System.setProperty(
-                "java.security.krb5.conf",
-                KRB5_CONFIG
-        );
-
-        System.setProperty(
-                "java.security.auth.login.config",
-                JAAS_CONFIG
-        );
-
-        System.setProperty(
-                "javax.security.auth.useSubjectCredsOnly",
-                "false"
-        );
-
-        /*
-         * Actual Impala daemon hostname.
-         *
-         * Example:
-         * cdp-p-wrkr2.hodomain.local
-         */
-        String impalaHost =
-                "cdp-p-wrkr" + workerNodeId + ".hodomain.local";
-
-        /*
-         * IMPORTANT:
-         *
-         * The URL MUST start with:
-         *
-         * jdbc:impala://
-         *
-         * Otherwise the Cloudera driver throws:
-         *
-         * Driver com.cloudera.impala.jdbc41.Driver
-         * claims to not accept jdbcUrl
-         */
-        String jdbcUrl = buildJdbcUrl(
-                impalaHost,
-                impalaHost
-        );
-
-        System.out.println(
-                "Connecting to Impala: " +
-                "jdbc:impala://" +
-                impalaHost +
-                ":" +
-                IMPALA_PORT +
-                "/" +
-                IMPALA_DATABASE
-        );
-
-        // ---------------------------------------------------------
-        // READ CONNECTION POOL
-        // ---------------------------------------------------------
-        HikariConfig readConfig =
-                createBaseConfig(jdbcUrl);
-
-        readConfig.setPoolName(
-                "HikariPool-Read-wrkr" + workerNodeId
-        );
-
-        readConfig.setMaximumPoolSize(50);
-        readConfig.setConnectionTimeout(10000);
-
-        this.readDataSource =
-                new HikariDataSource(readConfig);
-
-        // ---------------------------------------------------------
-        // WRITE CONNECTION POOL
-        // ---------------------------------------------------------
-        HikariConfig writeConfig =
-                createBaseConfig(jdbcUrl);
-
-        writeConfig.setPoolName(
-                "HikariPool-Write-wrkr" + workerNodeId
-        );
-
-        writeConfig.setMaximumPoolSize(14);
-        writeConfig.setConnectionTimeout(10000);
-
-        this.writeDataSource =
-                new HikariDataSource(writeConfig);
-    }
-
-    /**
-     * Creates the full Cloudera Impala JDBC URL.
-     *
-     * connectionHost:
-     *     Host/IP that TCP connects to.
-     *
-     * kerberosHost:
-     *     Hostname contained in the Impala Kerberos service principal.
-     *
-     * Normally, when connecting directly to a worker:
-     *
-     * connectionHost == kerberosHost
-     */
-    private String buildJdbcUrl(
-            String connectionHost,
-            String kerberosHost
-    ) {
-
-        return "jdbc:impala://" +
-                connectionHost +
-                ":" +
-                IMPALA_PORT +
-                "/" +
-                IMPALA_DATABASE +
-
-                ";AuthMech=1" +
-
-                // Kerberos authentication
-                ";KrbAuthType=1" +
-                ";KrbRealm=" + KERBEROS_REALM +
-                ";KrbHostFQDN=" + kerberosHost +
-                ";KrbServiceName=impala" +
-                ";KrbPrincipal=" + KERBEROS_PRINCIPAL +
-                ";KrbKeytabFile=" + KEYTAB_FILE +
-
-                // TLS
-                ";SSL=1" +
-                ";SSLTrustStore=" + TRUSTSTORE_FILE +
-                ";SSLTrustStorePwd=" + TRUSTSTORE_PASSWORD +
-
-                // Execute SQL natively in Impala
-                ";UseNativeQuery=1" +
-                ";";
-    }
-
-    /**
-     * Common HikariCP configuration.
-     */
-    private HikariConfig createBaseConfig(String jdbcUrl) {
-
-        HikariConfig config =
-                new HikariConfig();
-
-        config.setDriverClassName(
-                "com.cloudera.impala.jdbc41.Driver"
-        );
-
-        /*
-         * THIS is the property that was wrong in your error.
-         *
-         * It must contain the complete:
-         *
-         * jdbc:impala://...
-         *
-         * URL.
-         */
-        config.setJdbcUrl(jdbcUrl);
-
-        /*
-         * Impala JDBC drivers may not implement Connection.isValid()
-         * consistently, so use an explicit test query.
-         */
-        config.setConnectionTestQuery(
-                "SELECT 1"
-        );
-
-        config.setConnectionTimeout(
-                10000
-        );
-
-        config.setValidationTimeout(
-                5000
-        );
-
-        return config;
-    }
-
-    /**
-     * Prints Hikari connection pool statistics.
-     */
-    public void printPoolStatus() {
-
-        // ---------------------------------------------------------
-        // READ pool
-        // ---------------------------------------------------------
-        HikariPoolMXBean readBean =
-                readDataSource.getHikariPoolMXBean();
-
-        if (readBean != null) {
-
-            System.out.printf(
-                    "[%s] Max: %d | Total: %d | Active: %d | Idle: %d | Threads Waiting: %d%n",
-                    readDataSource.getPoolName(),
-                    readDataSource
-                            .getHikariConfigMXBean()
-                            .getMaximumPoolSize(),
-                    readBean.getTotalConnections(),
-                    readBean.getActiveConnections(),
-                    readBean.getIdleConnections(),
-                    readBean.getThreadsAwaitingConnection()
-            );
-        }
-
-        // ---------------------------------------------------------
-        // WRITE pool
-        // ---------------------------------------------------------
-        HikariPoolMXBean writeBean =
-                writeDataSource.getHikariPoolMXBean();
-
-        if (writeBean != null) {
-
-            System.out.printf(
-                    "[%s] Max: %d | Total: %d | Active: %d | Idle: %d | Threads Waiting: %d%n",
-                    writeDataSource.getPoolName(),
-                    writeDataSource
-                            .getHikariConfigMXBean()
-                            .getMaximumPoolSize(),
-                    writeBean.getTotalConnections(),
-                    writeBean.getActiveConnections(),
-                    writeBean.getIdleConnections(),
-                    writeBean.getThreadsAwaitingConnection()
-            );
-        }
-    }
-
-    /**
-     * Execute SELECT against customer_keys.
-     */
-    public int executeQuery(String rowKey)
-            throws SQLException {
-
-        int rowCount = 0;
-
-        String sql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        try (
-                Connection conn =
-                        readDataSource.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
-        ) {
-
-            stmt.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet resultSet =
-                            stmt.executeQuery()
-            ) {
-
-                while (resultSet.next()) {
-                    rowCount++;
-                }
-            }
-        }
-
-        return rowCount;
-    }
-
-    /**
-     * Execute read + insert operation.
-     */
-    public int executeInsert(String rowKey)
-            throws SQLException {
-
-        String readSql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        String insertSql =
-                "INSERT INTO dev_cnsmr_lo.customer_keys " +
-                "(row_key, country, postcode) " +
-                "VALUES (?, 'qw_EG', 'qw_11511')";
-
-        try (
-                Connection conn =
-                        writeDataSource.getConnection();
-
-                PreparedStatement readStatement =
-                        conn.prepareStatement(readSql);
-
-                PreparedStatement writeStatement =
-                        conn.prepareStatement(insertSql)
-        ) {
-
-            readStatement.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet ignored =
-                            readStatement.executeQuery()
-            ) {
-                // We only want to execute the SELECT.
-            }
-
-            writeStatement.setString(
-                    1,
-                    rowKey
-            );
-
-            return writeStatement.executeUpdate();
-        }
-    }
-
-    /**
-     * Shutdown Hikari pools.
-     */
-    public void closeDataSource() {
-
-        if (readDataSource != null &&
-                !readDataSource.isClosed()) {
-
-            readDataSource.close();
-        }
-
-        if (writeDataSource != null &&
-                !writeDataSource.isClosed()) {
-
-            writeDataSource.close();
-        }
-    }
-}
+INFO] --- clean:3.2.0:clean (default-clean) @ ImpalaStressTesting ---
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom (5.8 kB at 25 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom (5.1 kB at 25 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom (43 kB at 207 kB/s)
+[INFO] Artifact commons-io:commons-io:pom:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+[INFO] Artifact commons-io:commons-io:pom:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom (0 B at 0 B/s)
+[INFO] Artifact org.apache.commons:commons-parent:pom:42 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+[INFO] Artifact org.apache.commons:commons-parent:pom:42 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom (0 B at 0 B/s)
+[INFO] Artifact commons-io:commons-io:jar:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+[INFO] Artifact commons-io:commons-io:jar:2.6 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [central (https://repo.maven.apache.org/maven2, default, releases), apache.snapshots (https://repository.apache.org/snapshots, default, snapshots)]
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar (153 kB at 851 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar (0 B at 0 B/s)
+[INFO] Deleting C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2\target
+[INFO]
+[INFO] --- resources:3.4.0:resources (default-resources) @ ImpalaStressTesting ---
+[INFO] skip non existing resourceDirectory C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2\src\main\resources
+[INFO]
+[INFO] --- compiler:3.15.0:compile (default-compile) @ ImpalaStressTesting ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 6 source files with javac [debug target 11] to target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.612 s
+[INFO] Finished at: 2026-10-05T11:14:33+03:00
+[INFO] ------------------------------------------------------------------------
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>mvn exec:java -Dexec.mainClass="com.cib.impalaStressTester.ImpalaStressTester"
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
+[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+
+[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
+[INFO]
+[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
+SLF4J: Ignoring binding found at [jar:file:/C:/Users/MOBA42876/.m2/repository/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+java.util.NoSuchElementException
+        at java.base/java.util.StringTokenizer.nextToken(StringTokenizer.java:349)
+        at com.cloudera.impala.jdbc.common.BaseConnectionFactory.acceptsURL(Unknown Source)
+        at com.cloudera.impala.jdbc.common.AbstractDriver.acceptsURL(Unknown Source)
+        at com.zaxxer.hikari.util.DriverDataSource.<init>(DriverDataSource.java:109)
+        at com.zaxxer.hikari.pool.PoolBase.initializeDataSource(PoolBase.java:331)
+        at com.zaxxer.hikari.pool.PoolBase.<init>(PoolBase.java:114)
+        at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:108)
+        at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81)
+        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:27)
+        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod(AbstractExecJavaBase.java:402)
+        at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod(ExecJavaMojo.java:142)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader(AbstractExecJavaBase.java:377)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0(AbstractExecJavaBase.java:287)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+[WARNING]
+java.lang.RuntimeException: Driver com.cloudera.impala.jdbc41.Driver claims to not accept jdbcUrl, master-vm-cdp01-uat-app-387066.hodomain.local
+    at com.zaxxer.hikari.util.DriverDataSource.<init> (DriverDataSource.java:110)
+    at com.zaxxer.hikari.pool.PoolBase.initializeDataSource (PoolBase.java:331)
+    at com.zaxxer.hikari.pool.PoolBase.<init> (PoolBase.java:114)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:108)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:27)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.076 s
+[INFO] Finished at: 2026-10-05T11:14:50+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Driver com.cloudera.impala.jdbc41.Driver claims to not accept jdbcUrl, master-vm-cdp01-uat-app-387066.hodomain.local -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
