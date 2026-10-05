@@ -1,27 +1,184 @@
-Client {
-    com.sun.security.auth.module.Krb5LoginModule required
-    useKeyTab=true
-    keyTab="/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab"
-    principal="rise37432@TESTHODOMAIN.LOCAL"
-    storeKey=true
-    doNotPrompt=true
-    useTicketCache=false
-    refreshKrb5Config=true
-    debug=true;
-};
-
-
-
-export JDBC_ENABLE_JAAS=1
-
-java \
--Djava.security.krb5.conf=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
--Djava.security.auth.login.config=/home/rise37432/ImpalaStressTest/securityConfigs/moba42876_kafka_client_jaas.conf \
--Dsun.security.krb5.debug=true \
--jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
-
-
-KRB5_TRACE=/dev/stderr \
-KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
-kinit -kt /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
-rise37432@TESTHODOMAIN.LOCAL
+[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ java \
+> -Djava.security.krb5.conf=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
+> -Djava.security.auth.login.config=/home/rise37432/ImpalaStressTest/securityConfigs/moba42876_kafka_client_jaas.conf \
+> -Dsun.security.krb5.debug=true \
+> -jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+========================================
+NEW IMPALA SERVICE LOADED
+JDBC URL = jdbc:impala://master-vm-cdp01-uat-app-387066.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=1;KrbRealm=TESTHODOMAIN.LOCAL;KrbHostFQDN=master-vm-cdp01-uat-app-387066.hodomain.local;KrbServiceName=impala;KrbPrincipal=rise37432@TESTHODOMAIN.LOCAL;KrbKeytabFile=/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab;SSL=1;SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
+========================================
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
+SLF4J: Ignoring binding found at [jar:file:/home/rise37432/ImpalaStressTest/ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+Debug is  true storeKey true useTicketCache false useKeyTab true doNotPrompt true ticketCache is null isInitiator true KeyTab is /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab refreshKrb5Config is true principal is rise37432@TESTHODOMAIN.LOCAL tryFirstPass is false useFirstPass is false storePass is false clearPass is false
+Refreshing Kerberos configuration
+Java config name: /home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
+Loading krb5 profile at /home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
+Loaded from Java config
+>>> KdcAccessibility: reset
+>>> KdcAccessibility: reset
+>>> KeyTabInputStream, readName(): HODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): rise37432
+>>> KeyTab: load() entry length: 62; type: 17
+>>> KeyTabInputStream, readName(): HODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): rise37432
+>>> KeyTab: load() entry length: 78; type: 18
+>>> KeyTabInputStream, readName(): TESTHODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): rise37432
+>>> KeyTab: load() entry length: 66; type: 17
+>>> KeyTabInputStream, readName(): TESTHODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): rise37432
+>>> KeyTab: load() entry length: 82; type: 18
+Looking for keys for: rise37432@TESTHODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+Looking for keys for: rise37432@TESTHODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+default etypes for default_tkt_enctypes: 18.
+>>> KrbAsReq creating message
+>>> KrbKdcReq send: kdc=svhobr01.hodomain.local UDP:88, timeout=3000, number of retries =3, #bytes=171
+>>> KDCCommunication: kdc=svhobr01.hodomain.local UDP:88, timeout=3000,Attempt =1, #bytes=171
+SocketTimeOutException with attempt: 1
+>>> KDCCommunication: kdc=svhobr01.hodomain.local UDP:88, timeout=3000,Attempt =2, #bytes=171
+SocketTimeOutException with attempt: 2
+>>> KDCCommunication: kdc=svhobr01.hodomain.local UDP:88, timeout=3000,Attempt =3, #bytes=171
+SocketTimeOutException with attempt: 3
+>>> KrbKdcReq send: error trying svhobr01.hodomain.local
+java.net.SocketTimeoutException: Receive timed out
+        at java.base/java.net.PlainDatagramSocketImpl.receive0(Native Method)
+        at java.base/java.net.AbstractPlainDatagramSocketImpl.receive(AbstractPlainDatagramSocketImpl.java:200)
+        at java.base/java.net.DatagramSocket.receive(DatagramSocket.java:814)
+        at java.security.jgss/sun.security.krb5.internal.UDPClient.receive(NetClient.java:205)
+        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:409)
+        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:369)
+        at java.base/java.security.AccessController.doPrivileged(Native Method)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:353)
+        at java.security.jgss/sun.security.krb5.KdcComm.sendIfPossible(KdcComm.java:253)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:229)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:200)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.send(KrbAsReqBuilder.java:345)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.action(KrbAsReqBuilder.java:498)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:756)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.login(Krb5LoginModule.java:592)
+        at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:747)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:672)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:670)
+        at java.base/java.security.AccessController.doPrivileged(Native Method)
+        at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:670)
+        at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:581)
+        at com.cloudera.impala.jdbc.kerberos.Kerberos.getSubjectViaJAASConfig(Unknown Source)
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
+        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+>>> KdcAccessibility: add svhobr01.hodomain.local
+                [Krb5LoginModule] authentication failed
+Receive timed out
+Exception in thread "main" com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
+        at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException(HikariPool.java:596)
+        at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:582)
+        at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115)
+        at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81)
+        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:62)
+        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
+Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
+        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Receive timed out.
+        ... 9 more
+Caused by: javax.security.auth.login.LoginException: Receive timed out
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:784)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.login(Krb5LoginModule.java:592)
+        at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:747)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:672)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:670)
+        at java.base/java.security.AccessController.doPrivileged(Native Method)
+        at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:670)
+        at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:581)
+        at com.cloudera.impala.jdbc.kerberos.Kerberos.getSubjectViaJAASConfig(Unknown Source)
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
+        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
+        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.net.SocketTimeoutException: Receive timed out
+        at java.base/java.net.PlainDatagramSocketImpl.receive0(Native Method)
+        at java.base/java.net.AbstractPlainDatagramSocketImpl.receive(AbstractPlainDatagramSocketImpl.java:200)
+        at java.base/java.net.DatagramSocket.receive(DatagramSocket.java:814)
+        at java.security.jgss/sun.security.krb5.internal.UDPClient.receive(NetClient.java:205)
+        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:409)
+        at java.security.jgss/sun.security.krb5.KdcComm$KdcCommunication.run(KdcComm.java:369)
+        at java.base/java.security.AccessController.doPrivileged(Native Method)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:353)
+        at java.security.jgss/sun.security.krb5.KdcComm.sendIfPossible(KdcComm.java:253)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:229)
+        at java.security.jgss/sun.security.krb5.KdcComm.send(KdcComm.java:200)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.send(KrbAsReqBuilder.java:345)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.action(KrbAsReqBuilder.java:498)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:756)
+        ... 18 more
+[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ KRB5_TRACE=/dev/stderr \
+> KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini \
+> kinit -kt /home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
+> rise37432@TESTHODOMAIN.LOCAL
+[1184497] 1791203493.463418: Getting initial credentials for rise37432@TESTHODOMAIN.LOCAL
+[1184497] 1791203493.463419: Looked up etypes in keytab: aes128-cts, aes256-cts
+[1184497] 1791203493.463421: Sending unauthenticated request
+[1184497] 1791203493.463422: Sending request (199 bytes) to TESTHODOMAIN.LOCAL
+[1184497] 1791203493.463423: Sending initial UDP request to dgram 10.11.60.22:88
+[1184497] 1791203493.463424: Received answer (200 bytes) from dgram 10.11.60.22:88
+[1184497] 1791203493.463425: Response was from master KDC
+[1184497] 1791203493.463426: Received error from KDC: -1765328359/Additional pre-authentication required
+[1184497] 1791203493.463429: Preauthenticating using KDC method data
+[1184497] 1791203493.463430: Processing preauth types: PA-PK-AS-REQ (16), PA-PK-AS-REP_OLD (15), PA-ETYPE-INFO2 (19), PA-ENC-TIMESTAMP (2)
+[1184497] 1791203493.463431: Selected etype info: etype aes256-cts, salt "TESTHODOMAIN.LOCALRISE37432", params ""
+[1184497] 1791203493.463432: Retrieving rise37432@TESTHODOMAIN.LOCAL from FILE:/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab (vno 0, enctype aes256-cts) with result: 0/Success
+[1184497] 1791203493.463433: AS key obtained for encrypted timestamp: aes256-cts/DE2F
+[1184497] 1791203493.463435: Encrypted timestamp (for 1791203493.834149): plain 301AA011180F32303236313030353132333133335AA10502030CBA65, encrypted 1C0D15AFE58BA32628A4B8F15C92818C76707372A8964413A46C90E81D364E2D203960166CCBC2E777568264BA586E4BFE7433E1DBACF77F
+[1184497] 1791203493.463436: Preauth module encrypted_timestamp (2) (real) returned: 0/Success
+[1184497] 1791203493.463437: Produced preauth for next request: PA-ENC-TIMESTAMP (2)
+[1184497] 1791203493.463438: Sending request (279 bytes) to TESTHODOMAIN.LOCAL
+[1184497] 1791203493.463439: Sending initial UDP request to dgram 10.11.60.22:88
+[1184497] 1791203493.463440: Received answer (108 bytes) from dgram 10.11.60.22:88
+[1184497] 1791203493.463441: Response was from master KDC
+[1184497] 1791203493.463442: Received error from KDC: -1765328332/Response too big for UDP, retry with TCP
+[1184497] 1791203493.463443: Request or response is too big for UDP; retrying with TCP
+[1184497] 1791203493.463444: Sending request (279 bytes) to TESTHODOMAIN.LOCAL (tcp only)
+[1184497] 1791203493.463445: Initiating TCP connection to stream 10.11.60.22:88
+[1184497] 1791203493.463446: Sending TCP request to stream 10.11.60.22:88
+[1184497] 1791203493.463447: Received answer (1776 bytes) from stream 10.11.60.22:88
+[1184497] 1791203493.463448: Terminating TCP connection to stream 10.11.60.22:88
+[1184497] 1791203493.463449: Response was from master KDC
+[1184497] 1791203493.463450: Processing preauth types: PA-ETYPE-INFO2 (19)
+[1184497] 1791203493.463451: Selected etype info: etype aes256-cts, salt "TESTHODOMAIN.LOCALRISE37432", params ""
+[1184497] 1791203493.463452: Produced preauth for next request: (empty)
+[1184497] 1791203493.463453: AS key determined by preauth: aes256-cts/DE2F
+[1184497] 1791203493.463454: Decrypted AS reply; session key is: aes256-cts/C9F6
+[1184497] 1791203493.463455: FAST negotiation: unavailable
+[1184497] 1791203493.463456: Initializing FILE:/tmp/krb5cc_206621 with default princ rise37432@TESTHODOMAIN.LOCAL
+[1184497] 1791203493.463457: Storing rise37432@TESTHODOMAIN.LOCAL -> krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL in FILE:/tmp/krb5cc_206621
+[1184497] 1791203493.463458: Storing config in FILE:/tmp/krb5cc_206621 for krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL: pa_type: 2
+[1184497] 1791203493.463459: Storing rise37432@TESTHODOMAIN.LOCAL -> krb5_ccache_conf_data/pa_type/krbtgt\/TESTHODOMAIN.LOCAL\@TESTHODOMAIN.LOCAL@X-CACHECONF: in FILE:/tmp/krb5cc_206621
+[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$
