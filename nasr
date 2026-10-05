@@ -1,14 +1,85 @@
+log4j:WARN No appenders could be found for logger (com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport).
+log4j:WARN Please initialize the log4j system properly.
+[WARNING]
+com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transport for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed.
+    at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException (HikariPool.java:596)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:582)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:62)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:829)
+Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transport for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed.
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transport for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed.
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: java.lang.RuntimeException: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed
+    at com.cloudera.impala.hivecommon.api.HiveServerPrivilegedAction.run (Unknown Source)
+    at java.security.AccessController.doPrivileged (Native Method)
+    at javax.security.auth.Subject.doAs (Subject.java:361)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+    at java.lang.Thread.run (Thread.java:829)
+Caused by: com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TTransportException: GSS initiate failed
+    at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport.sendAndThrowMessage (TSaslTransport.java:221)
+    at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport.open (TSaslTransport.java:297)
+    at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslClientTransport.open (TSaslClientTransport.java:37)
+    at com.cloudera.impala.hivecommon.api.HiveServerPrivilegedAction.run (Unknown Source)
+    at java.security.AccessController.doPrivileged (Native Method)
+    at javax.security.auth.Subject.doAs (Subject.java:361)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
     at java.lang.Thread.run (Thread.java:829)
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  3.746 s
-[INFO] Finished at: 2026-10-05T14:02:54+03:00
+[INFO] Total time:  4.450 s
+[INFO] Finished at: 2026-10-05T14:10:17+03:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Pre-authentication information was invalid (24).: Identifier doesn't match expected value (906) -> [Help 1]
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transport for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed. -> [Help 1]
 [ERROR]
 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
 [ERROR]
 [ERROR] For more information about the errors and possible solutions, please read the following articles:
 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
