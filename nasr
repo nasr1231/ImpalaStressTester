@@ -1,52 +1,67 @@
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$ java -jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
-========================================
-NEW IMPALA SERVICE LOADED
-JDBC URL = jdbc:impala://master-vm-cdp01-uat-app-387066.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=2;KrbRealm=TESTHODOMAIN.LOCA               L;KrbHostFQDN=master-vm-cdp01-uat-app-387066.hodomain.local;KrbServiceName=impala;SSL=1;SSLTrustStore=/home/rise37432/ImpalaStressTest/securi               tyConfigs/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
-========================================
-SLF4J: No SLF4J providers were found.
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
-SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
-SLF4J: Ignoring binding found at [jar:file:/home/rise37432/ImpalaStressTest/ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar!/org/slf4j/impl/Stat               icLoggerBinder.class]
-SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
-log4j:WARN No appenders could be found for logger (com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport).
-log4j:WARN Please initialize the log4j system properly.
-Exception in thread "main" com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDri               ver](500164) Error initialized or created transport for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS                initiate failed.
-        at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException(HikariPool.java:596)
-        at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:582)
-        at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:115)
-        at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81)
-        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:60)
-        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
-Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transport for authentication: [Cloudera][               ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed.
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
-        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500164) Error initialized or created transpo               rt for authentication: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed.
-        ... 9 more
-Caused by: java.lang.RuntimeException: [Cloudera][ImpalaJDBCDriver](500169) Unable to connect to server: GSS initiate failed
-        at com.cloudera.impala.hivecommon.api.HiveServerPrivilegedAction.run(Unknown Source)
-        at java.base/java.security.AccessController.doPrivileged(Native Method)
-        at java.base/javax.security.auth.Subject.doAs(Subject.java:361)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport(Unknown Source)
-        at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient(Unknown Source)
-        at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-        at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TTransportException: GSS initiate failed
-        at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport.sendAndThrowMessage(TSaslTransport.java:221)
-        at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslTransport.open(TSaslTransport.java:297)
-        at com.cloudera.impala.jdbc41.internal.apache.thrift.transport.TSaslClientTransport.open(TSaslClientTransport.java:37)
-        ... 13 more
-[rise37432@cdp-worker-01-uat-app-387073 ImpalaStressTest]$
+Worked for 28s
+
+Now the Java side is finally using the correct mode:
+
+KrbAuthType=2
+
+and the previous JAAS/KDC timeout is gone. The remaining GSS initiate failed is now in the ticket-cache/service-principal stage. Cloudera documents that KrbAuthType=2 uses the Kerberos ticket cache via KRB5_CONFIG and KRB5CCNAME. 
+
+The first thing I would fix is that in your last command you ran only:
+
+java -jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+
+but your earlier KRB5_CONFIG=... was scoped only to the kinit command. Export both variables before Java:
+
+export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
+export KRB5CCNAME=FILE:/tmp/krb5cc_206621
+
+echo $KRB5_CONFIG
+echo $KRB5CCNAME
+
+klist
+
+Then request the exact service ticket Java needs for the LB:
+
+kvno impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+
+Then check:
+
+klist
+
+You want to see both:
+
+krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL
+
+and:
+
+impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+
+Then run:
+
+java \
+-Djava.security.krb5.conf="$KRB5_CONFIG" \
+-Dsun.security.krb5.debug=true \
+-jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+
+The kvno result is the key discriminator:
+
+- If kvno says something like Server not found in Kerberos database, then the LB SPN is missing. The required SPN is:
+  impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+- If kvno succeeds but Java still gives GSS initiate failed, then the likely problem is on the Impala side: the backend impalad keytabs do not contain the LB principal. Cloudera says the Impala Daemons Load Balancer setting should be configured as LB_HOST:PORT; with Kerberos enabled, Cloudera Manager adds impala/LB_HOST@REALM to all Impala daemon keytabs, followed by an Impala restart. 
+
+For your environment that setting should correspond to:
+
+master-vm-cdp01-uat-app-387066.hodomain.local:21050
+
+So run these exact commands next:
+
+export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
+export KRB5CCNAME=FILE:/tmp/krb5cc_206621
+
+klist
+
+kvno impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+
+klist
+
+The output of kvno will tell us whether this is still client-side or definitively an LB/Impala SPN configuration issue.
