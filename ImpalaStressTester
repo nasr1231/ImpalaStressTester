@@ -1,0 +1,164 @@
+package com.cib.impalaStressTester;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.cib.impalaStressTester.Constants.*;
+
+public class ImpalaStressTester {
+
+
+    public static final int END_ROUND_NUMBER = 11;
+    public static final int BATCH_PR_MIN = 61;
+    public static final int START_ROUND_NUM = 7;
+
+    public static void main(String[] args) throws InterruptedException {
+
+        // Split Thread Pools
+
+
+        long testStartTime = System.currentTimeMillis();
+        boolean breached = false;
+
+        ImpalaService[] service = {
+                //new ImpalaService(1),
+                new ImpalaService(2)
+                //new ImpalaService(3)
+        };
+
+        System.out.println("Starting   Stress Test...");
+
+
+        // Cleanup hooks
+        for (ImpalaService impalaService : service) {
+            Runtime.getRuntime().addShutdownHook(new Thread(impalaService::closeDataSource));
+        }
+        round(testStartTime, service, START_ROUND_NUM);
+    }
+
+    private static void round(long testStartTime, ImpalaService[] service, int roundNum) throws InterruptedException {
+        int readQPS = roundNum * 10;
+        System.out.printf("Round %d Started : Read QPS %d%n", roundNum, readQPS);
+        ExecutorService readExecutor = Executors.newFixedThreadPool(READ_THREADS);
+        ExecutorService writeExecutor = Executors.newFixedThreadPool(WRITE_THREADS);
+        ScheduledExecutorService batchOrchestrator = Executors.newSingleThreadScheduledExecutor();
+        AtomicReference<ScheduledFuture<?>> futureHolder = new AtomicReference<>();
+        AtomicInteger batchCounter = new AtomicInteger(0);
+        ScheduledFuture<?> scheduledFuture = batchOrchestrator.scheduleWithFixedDelay(() -> {
+            int i = batchCounter.incrementAndGet();
+            if (i < BATCH_PR_MIN) {
+                System.out.printf("Round %d Batch %d Started %3$tT%n ", roundNum, i, LocalDateTime.now());
+                List<Future> all = new ArrayList<>();
+                IterationMetrics batchInfo = new IterationMetrics(roundNum, i);
+                all.addAll(submitReadBatch(readExecutor, service, batchInfo, readQPS));
+                submitWriteBatch(writeExecutor, service, batchInfo);
+                iterationEnd(all, batchInfo);
+                if (batchInfo.getTracker().isBreached()) {
+                    System.out.println("Shut Down Started");
+                    shutDown(readExecutor, writeExecutor, futureHolder.get());
+                    closeAllServices(service);
+                }
+            } else {
+                System.out.println("Shut Down Started");
+                shutDown(readExecutor, writeExecutor, futureHolder.get());
+                rerun(service, roundNum);
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+        futureHolder.set(scheduledFuture);
+
+
+    }
+
+    private static void rerun(ImpalaService[] service, int roundNum) {
+
+        sleepTillMinStart();
+
+        int newRound = roundNum + 1;
+        if (newRound <= END_ROUND_NUMBER) {
+            try {
+
+                round(System.currentTimeMillis(), service, newRound);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Failed at round" + newRound, e);
+            }
+        } else {
+            closeAllServices(service);
+        }
+    }
+
+    private static void sleepTillMinStart() {
+        long currentMillis = System.currentTimeMillis();
+        long millisInCurrentMinute = currentMillis % 60000;
+        long sleepTime = 60000 - millisInCurrentMinute;
+
+        // Block the thread until second 0
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void closeAllServices(ImpalaService[] service) {
+        for (ImpalaService srvc : service) {
+            System.out.println("Close DataSource");
+            srvc.closeDataSource();
+        }
+    }
+
+    private static void shutDown(ExecutorService readExecutor, ExecutorService writeExecutor, ScheduledFuture<?> scheduledFuture) {
+        scheduledFuture.cancel(false); // false lets the current run finish; true interrupts it
+        readExecutor.shutdownNow();
+        writeExecutor.shutdownNow();
+        try {
+            readExecutor.awaitTermination(1, TimeUnit.MINUTES);
+            writeExecutor.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void iterationEnd(List<Future> all, IterationMetrics rBatchInfo) {
+        for (Future f : all) {
+            try {
+                f.get();
+            } catch (Exception e) {
+                new RuntimeException(e);
+            }
+        }
+        rBatchInfo.print();
+    }
+
+    private static List<Future> submitReadBatch(ExecutorService readExecutor,
+                                                ImpalaService[] service,
+                                                IterationMetrics batchInfo,
+                                                int concurrentQueries) {
+
+
+        List<Future> readFutureList = new ArrayList<>();
+        for (int i = 0; i < concurrentQueries; i++) {
+
+            final int iteration = i;
+
+            readFutureList.add(readExecutor.submit(() -> new QueryRun(true, service,
+                    iteration % 3, batchInfo).run()));
+        }
+        return readFutureList;
+    }
+
+    private static List<Future> submitWriteBatch(ExecutorService writeExecutor, ImpalaService[] service,
+                                                 IterationMetrics batchInfo) {
+        List<Future> writeFutureList = new ArrayList<>();
+        for (int i = 0; i < WRITE_QPS; i++) {
+            final int iteration = i;
+            writeFutureList.add(writeExecutor.submit(() -> new QueryRun(false, service,
+                    iteration % 3, batchInfo).run()));
+
+        }
+        return writeFutureList;
+    }
+}
