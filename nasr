@@ -4,6 +4,10 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
+
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +18,8 @@ public class ImpalaService {
     private final HikariDataSource readDataSource;
     private final HikariDataSource writeDataSource;
 
-    private static final String DATABASE = "DEV_CNSMR_LO";
+    private static final String DATABASE =
+            "DEV_CNSMR_LO";
 
     private static final String KRB_REALM =
             "HODOMAIN.LOCAL";
@@ -51,13 +56,16 @@ public class ImpalaService {
          * 3 -> cdp-p-wrkr3.hodomain.local
          */
         if (workerNodeId < 1 || workerNodeId > 3) {
+
             throw new IllegalArgumentException(
-                    "Invalid workerNodeId: " + workerNodeId +
+                    "Invalid workerNodeId: " +
+                    workerNodeId +
                     ". Allowed values are 1, 2, or 3."
             );
         }
 
-        this.workerNodeId = workerNodeId;
+        this.workerNodeId =
+                workerNodeId;
 
         this.host =
                 "cdp-p-wrkr" +
@@ -65,7 +73,9 @@ public class ImpalaService {
                 ".hodomain.local";
 
         /*
-         * JVM Kerberos configuration
+         * -------------------------------------------------
+         * Kerberos / JAAS JVM configuration
+         * -------------------------------------------------
          */
         System.setProperty(
                 "java.security.krb5.conf",
@@ -83,7 +93,47 @@ public class ImpalaService {
         );
 
         /*
+         * Enable while troubleshooting.
+         * Set to false/remove later if logs become too noisy.
+         */
+        System.setProperty(
+                "sun.security.krb5.debug",
+                "true"
+        );
+
+        /*
+         * -------------------------------------------------
+         * Validate local security files
+         * -------------------------------------------------
+         */
+        printKerberosConfiguration();
+
+        validateSecurityFiles();
+
+        /*
+         * -------------------------------------------------
+         * Test JAAS login BEFORE creating Hikari pools.
+         *
+         * This separates:
+         *
+         * keytab / JAAS / KDC problems
+         *
+         * from:
+         *
+         * JDBC / Impala / TLS problems
+         * -------------------------------------------------
+         */
+        testKerberosLogin();
+
+        /*
+         * -------------------------------------------------
          * Production Impala JDBC URL
+         *
+         * KrbAuthType=1 means JAAS performs the login.
+         *
+         * Principal and keytab therefore come from
+         * the Client block in the JAAS file.
+         * -------------------------------------------------
          */
         this.jdbcUrl =
                 "jdbc:impala://" +
@@ -93,7 +143,6 @@ public class ImpalaService {
 
                 ";AuthMech=1" +
 
-                // JAAS / keytab Kerberos authentication
                 ";KrbAuthType=1" +
 
                 ";KrbRealm=" +
@@ -104,13 +153,6 @@ public class ImpalaService {
 
                 ";KrbServiceName=impala" +
 
-                ";KrbPrincipal=" +
-                KRB_PRINCIPAL +
-
-                ";KrbKeytabFile=" +
-                KEYTAB_FILE +
-
-                // TLS
                 ";SSL=1" +
 
                 ";SSLTrustStore=" +
@@ -121,16 +163,41 @@ public class ImpalaService {
 
                 ";UseNativeQuery=1;";
 
-        System.out.println("========================================");
-        System.out.println("PRODUCTION IMPALA STRESS TEST");
-        System.out.println("Worker ID : " + workerNodeId);
-        System.out.println("Host      : " + host);
-        System.out.println("Database  : " + DATABASE);
-        System.out.println("JDBC URL  : " + jdbcUrl);
-        System.out.println("========================================");
+        System.out.println();
+        System.out.println(
+                "========================================"
+        );
+        System.out.println(
+                "PRODUCTION IMPALA STRESS TEST"
+        );
+        System.out.println(
+                "Worker ID : " +
+                workerNodeId
+        );
+        System.out.println(
+                "Host      : " +
+                host
+        );
+        System.out.println(
+                "Database  : " +
+                DATABASE
+        );
+        System.out.println(
+                "Principal : " +
+                KRB_PRINCIPAL
+        );
+        System.out.println(
+                "JDBC URL  : " +
+                jdbcUrl
+        );
+        System.out.println(
+                "========================================"
+        );
 
         /*
+         * -------------------------------------------------
          * READ connection pool
+         * -------------------------------------------------
          */
         HikariConfig readConfig =
                 createBaseConfig();
@@ -140,7 +207,15 @@ public class ImpalaService {
                 workerNodeId
         );
 
-        readConfig.setMaximumPoolSize(50);
+        /*
+         * Keep your existing value.
+         *
+         * For the first production test you may want
+         * to temporarily reduce this to 5-10.
+         */
+        readConfig.setMaximumPoolSize(
+                50
+        );
 
         readConfig.setConnectionTimeout(
                 10000
@@ -152,7 +227,9 @@ public class ImpalaService {
                 );
 
         /*
+         * -------------------------------------------------
          * WRITE connection pool
+         * -------------------------------------------------
          */
         HikariConfig writeConfig =
                 createBaseConfig();
@@ -162,7 +239,15 @@ public class ImpalaService {
                 workerNodeId
         );
 
-        writeConfig.setMaximumPoolSize(14);
+        /*
+         * Keep your existing value.
+         *
+         * For the first production test you may want
+         * to temporarily reduce this to 1-2.
+         */
+        writeConfig.setMaximumPoolSize(
+                14
+        );
 
         writeConfig.setConnectionTimeout(
                 10000
@@ -174,6 +259,11 @@ public class ImpalaService {
                 );
     }
 
+    /*
+     * -------------------------------------------------
+     * Hikari base configuration
+     * -------------------------------------------------
+     */
     private HikariConfig createBaseConfig() {
 
         HikariConfig config =
@@ -202,16 +292,186 @@ public class ImpalaService {
         return config;
     }
 
-    /**
-     * Stress-test SELECT.
-     *
-     * Executes a point lookup against the production HBase-backed
-     * customer_keys table.
+    /*
+     * -------------------------------------------------
+     * Kerberos configuration diagnostics
+     * -------------------------------------------------
+     */
+    private void printKerberosConfiguration() {
+
+        System.out.println(
+                "========================================"
+        );
+
+        System.out.println(
+                "KERBEROS CONFIGURATION"
+        );
+
+        System.out.println(
+                "krb5.conf = " +
+                System.getProperty(
+                        "java.security.krb5.conf"
+                )
+        );
+
+        System.out.println(
+                "JAAS      = " +
+                System.getProperty(
+                        "java.security.auth.login.config"
+                )
+        );
+
+        System.out.println(
+                "Principal = " +
+                KRB_PRINCIPAL
+        );
+
+        System.out.println(
+                "Keytab    = " +
+                KEYTAB_FILE
+        );
+
+        System.out.println(
+                "========================================"
+        );
+    }
+
+    /*
+     * -------------------------------------------------
+     * Validate local files before attempting Kerberos.
+     * -------------------------------------------------
+     */
+    private void validateSecurityFiles() {
+
+        File krb5File =
+                new File(
+                        KRB5_CONFIG
+                );
+
+        File jaasFile =
+                new File(
+                        JAAS_CONFIG
+                );
+
+        File keytabFile =
+                new File(
+                        KEYTAB_FILE
+                );
+
+        File truststoreFile =
+                new File(
+                        TRUSTSTORE_FILE
+                );
+
+        System.out.println(
+                "krb5 exists       = " +
+                krb5File.exists()
+        );
+
+        System.out.println(
+                "JAAS exists       = " +
+                jaasFile.exists()
+        );
+
+        System.out.println(
+                "Keytab exists     = " +
+                keytabFile.exists()
+        );
+
+        System.out.println(
+                "Truststore exists = " +
+                truststoreFile.exists()
+        );
+
+        if (!krb5File.exists()) {
+
+            throw new IllegalStateException(
+                    "Kerberos configuration file not found: " +
+                    KRB5_CONFIG
+            );
+        }
+
+        if (!jaasFile.exists()) {
+
+            throw new IllegalStateException(
+                    "JAAS configuration file not found: " +
+                    JAAS_CONFIG
+            );
+        }
+
+        if (!keytabFile.exists()) {
+
+            throw new IllegalStateException(
+                    "Kerberos keytab not found: " +
+                    KEYTAB_FILE
+            );
+        }
+
+        if (!truststoreFile.exists()) {
+
+            throw new IllegalStateException(
+                    "SSL truststore not found: " +
+                    TRUSTSTORE_FILE
+            );
+        }
+    }
+
+    /*
+     * -------------------------------------------------
+     * Explicit JAAS Kerberos test
+     * -------------------------------------------------
+     */
+    private void testKerberosLogin() {
+
+        System.out.println();
+        System.out.println(
+                "Testing JAAS Client Kerberos login..."
+        );
+
+        try {
+
+            LoginContext loginContext =
+                    new LoginContext(
+                            "Client"
+                    );
+
+            loginContext.login();
+
+            System.out.println(
+                    "JAAS Kerberos login SUCCESS"
+            );
+
+            System.out.println(
+                    "Authenticated subject = " +
+                    loginContext.getSubject()
+            );
+
+        } catch (LoginException e) {
+
+            System.err.println(
+                    "JAAS Kerberos login FAILED"
+            );
+
+            e.printStackTrace();
+
+            throw new IllegalStateException(
+                    "Kerberos JAAS login failed for principal " +
+                    KRB_PRINCIPAL,
+                    e
+            );
+        }
+    }
+
+    /*
+     * -------------------------------------------------
+     * READ stress query
+     * -------------------------------------------------
      */
     public int executeQuery(String rowKey)
             throws SQLException {
 
-        int rowCount = 0;
+        int rowCount =
+                0;
 
         String sql =
                 "SELECT shortname, country, postcode " +
@@ -220,10 +480,13 @@ public class ImpalaService {
 
         try (
                 Connection conn =
-                        readDataSource.getConnection();
+                        readDataSource
+                                .getConnection();
 
                 PreparedStatement stmt =
-                        conn.prepareStatement(sql)
+                        conn.prepareStatement(
+                                sql
+                        )
         ) {
 
             stmt.setString(
@@ -236,7 +499,10 @@ public class ImpalaService {
                             stmt.executeQuery()
             ) {
 
-                while (result.next()) {
+                while (
+                        result.next()
+                ) {
+
                     rowCount++;
                 }
             }
@@ -245,10 +511,17 @@ public class ImpalaService {
         return rowCount;
     }
 
-    /**
-     * Stress-test WRITE.
+    /*
+     * -------------------------------------------------
+     * WRITE stress query
      *
-     * First performs a read and then inserts the test row.
+     * Performs:
+     *
+     * 1. SELECT
+     * 2. INSERT
+     *
+     * against the production customer_keys table.
+     * -------------------------------------------------
      */
     public int executeInsert(String rowKey)
             throws SQLException {
@@ -265,7 +538,8 @@ public class ImpalaService {
 
         try (
                 Connection conn =
-                        writeDataSource.getConnection();
+                        writeDataSource
+                                .getConnection();
 
                 PreparedStatement readStmt =
                         conn.prepareStatement(
@@ -279,7 +553,7 @@ public class ImpalaService {
         ) {
 
             /*
-             * Read operation
+             * Execute READ first
              */
             readStmt.setString(
                     1,
@@ -290,21 +564,37 @@ public class ImpalaService {
                     ResultSet result =
                             readStmt.executeQuery()
             ) {
-                // Execute and immediately close.
+
+                /*
+                 * Consume result set.
+                 *
+                 * This ensures the read is actually completed.
+                 */
+                while (
+                        result.next()
+                ) {
+                    // No processing required.
+                }
             }
 
             /*
-             * Write operation
+             * Execute WRITE
              */
             writeStmt.setString(
                     1,
                     rowKey
             );
 
-            return writeStmt.executeUpdate();
+            return writeStmt
+                    .executeUpdate();
         }
     }
 
+    /*
+     * -------------------------------------------------
+     * Hikari pool metrics
+     * -------------------------------------------------
+     */
     public void printPoolStatus() {
 
         HikariPoolMXBean readBean =
@@ -322,13 +612,17 @@ public class ImpalaService {
 
                     workerNodeId,
 
-                    readDataSource.getPoolName(),
+                    readDataSource
+                            .getPoolName(),
 
-                    readBean.getTotalConnections(),
+                    readBean
+                            .getTotalConnections(),
 
-                    readBean.getActiveConnections(),
+                    readBean
+                            .getActiveConnections(),
 
-                    readBean.getIdleConnections(),
+                    readBean
+                            .getIdleConnections(),
 
                     readBean
                             .getThreadsAwaitingConnection()
@@ -350,13 +644,17 @@ public class ImpalaService {
 
                     workerNodeId,
 
-                    writeDataSource.getPoolName(),
+                    writeDataSource
+                            .getPoolName(),
 
-                    writeBean.getTotalConnections(),
+                    writeBean
+                            .getTotalConnections(),
 
-                    writeBean.getActiveConnections(),
+                    writeBean
+                            .getActiveConnections(),
 
-                    writeBean.getIdleConnections(),
+                    writeBean
+                            .getIdleConnections(),
 
                     writeBean
                             .getThreadsAwaitingConnection()
@@ -365,13 +663,20 @@ public class ImpalaService {
     }
 
     public String getHost() {
+
         return host;
     }
 
     public int getWorkerNodeId() {
+
         return workerNodeId;
     }
 
+    /*
+     * -------------------------------------------------
+     * Close pools cleanly
+     * -------------------------------------------------
+     */
     public void closeDataSource() {
 
         if (
