@@ -1,698 +1,311 @@
-package com.cib.impalaStressTester;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariPoolMXBean;
-
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
-import java.io.File;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class ImpalaService {
-
-    private final HikariDataSource readDataSource;
-    private final HikariDataSource writeDataSource;
-
-    private static final String DATABASE =
-            "DEV_CNSMR_LO";
-
-    private static final String KRB_REALM =
-            "HODOMAIN.LOCAL";
-
-    private static final String KRB_PRINCIPAL =
-            "moba42876@HODOMAIN.LOCAL";
-
-    private static final String KRB5_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini";
-
-    private static final String JAAS_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf";
-
-    private static final String KEYTAB_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab";
-
-    private static final String TRUSTSTORE_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks";
-
-    private static final String TRUSTSTORE_PASSWORD =
-            "CDPEIMPASS";
-
-    private final int workerNodeId;
-    private final String host;
-    private final String jdbcUrl;
-
-    public ImpalaService(int workerNodeId) {
-
-        /*
-         * Production workers:
-         *
-         * 1 -> cdp-p-wrkr1.hodomain.local
-         * 2 -> cdp-p-wrkr2.hodomain.local
-         * 3 -> cdp-p-wrkr3.hodomain.local
-         */
-        if (workerNodeId < 1 || workerNodeId > 3) {
-
-            throw new IllegalArgumentException(
-                    "Invalid workerNodeId: " +
-                    workerNodeId +
-                    ". Allowed values are 1, 2, or 3."
-            );
-        }
-
-        this.workerNodeId =
-                workerNodeId;
-
-        this.host =
-                "cdp-p-wrkr" +
-                workerNodeId +
-                ".hodomain.local";
-
-        /*
-         * -------------------------------------------------
-         * Kerberos / JAAS JVM configuration
-         * -------------------------------------------------
-         */
-        System.setProperty(
-                "java.security.krb5.conf",
-                KRB5_CONFIG
-        );
-
-        System.setProperty(
-                "java.security.auth.login.config",
-                JAAS_CONFIG
-        );
-
-        System.setProperty(
-                "javax.security.auth.useSubjectCredsOnly",
-                "false"
-        );
-
-        /*
-         * Enable while troubleshooting.
-         * Set to false/remove later if logs become too noisy.
-         */
-        System.setProperty(
-                "sun.security.krb5.debug",
-                "true"
-        );
-
-        /*
-         * -------------------------------------------------
-         * Validate local security files
-         * -------------------------------------------------
-         */
-        printKerberosConfiguration();
-
-        validateSecurityFiles();
-
-        /*
-         * -------------------------------------------------
-         * Test JAAS login BEFORE creating Hikari pools.
-         *
-         * This separates:
-         *
-         * keytab / JAAS / KDC problems
-         *
-         * from:
-         *
-         * JDBC / Impala / TLS problems
-         * -------------------------------------------------
-         */
-        testKerberosLogin();
-
-        /*
-         * -------------------------------------------------
-         * Production Impala JDBC URL
-         *
-         * KrbAuthType=1 means JAAS performs the login.
-         *
-         * Principal and keytab therefore come from
-         * the Client block in the JAAS file.
-         * -------------------------------------------------
-         */
-        this.jdbcUrl =
-                "jdbc:impala://" +
-                host +
-                ":21050/" +
-                DATABASE +
-
-                ";AuthMech=1" +
-
-                ";KrbAuthType=1" +
-
-                ";KrbRealm=" +
-                KRB_REALM +
-
-                ";KrbHostFQDN=" +
-                host +
-
-                ";KrbServiceName=impala" +
-
-                ";SSL=1" +
-
-                ";SSLTrustStore=" +
-                TRUSTSTORE_FILE +
-
-                ";SSLTrustStorePwd=" +
-                TRUSTSTORE_PASSWORD +
-
-                ";UseNativeQuery=1;";
-
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-        System.out.println(
-                "PRODUCTION IMPALA STRESS TEST"
-        );
-        System.out.println(
-                "Worker ID : " +
-                workerNodeId
-        );
-        System.out.println(
-                "Host      : " +
-                host
-        );
-        System.out.println(
-                "Database  : " +
-                DATABASE
-        );
-        System.out.println(
-                "Principal : " +
-                KRB_PRINCIPAL
-        );
-        System.out.println(
-                "JDBC URL  : " +
-                jdbcUrl
-        );
-        System.out.println(
-                "========================================"
-        );
-
-        /*
-         * -------------------------------------------------
-         * READ connection pool
-         * -------------------------------------------------
-         */
-        HikariConfig readConfig =
-                createBaseConfig();
-
-        readConfig.setPoolName(
-                "HikariPool-Read-wrkr" +
-                workerNodeId
-        );
-
-        /*
-         * Keep your existing value.
-         *
-         * For the first production test you may want
-         * to temporarily reduce this to 5-10.
-         */
-        readConfig.setMaximumPoolSize(
-                50
-        );
-
-        readConfig.setConnectionTimeout(
-                10000
-        );
-
-        this.readDataSource =
-                new HikariDataSource(
-                        readConfig
-                );
-
-        /*
-         * -------------------------------------------------
-         * WRITE connection pool
-         * -------------------------------------------------
-         */
-        HikariConfig writeConfig =
-                createBaseConfig();
-
-        writeConfig.setPoolName(
-                "HikariPool-Write-wrkr" +
-                workerNodeId
-        );
-
-        /*
-         * Keep your existing value.
-         *
-         * For the first production test you may want
-         * to temporarily reduce this to 1-2.
-         */
-        writeConfig.setMaximumPoolSize(
-                14
-        );
-
-        writeConfig.setConnectionTimeout(
-                10000
-        );
-
-        this.writeDataSource =
-                new HikariDataSource(
-                        writeConfig
-                );
-    }
-
-    /*
-     * -------------------------------------------------
-     * Hikari base configuration
-     * -------------------------------------------------
-     */
-    private HikariConfig createBaseConfig() {
-
-        HikariConfig config =
-                new HikariConfig();
-
-        config.setDriverClassName(
-                "com.cloudera.impala.jdbc41.Driver"
-        );
-
-        config.setJdbcUrl(
-                jdbcUrl
-        );
-
-        config.setConnectionTimeout(
-                10000
-        );
-
-        config.setValidationTimeout(
-                5000
-        );
-
-        config.setConnectionTestQuery(
-                "SELECT 1"
-        );
-
-        return config;
-    }
-
-    /*
-     * -------------------------------------------------
-     * Kerberos configuration diagnostics
-     * -------------------------------------------------
-     */
-    private void printKerberosConfiguration() {
-
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "KERBEROS CONFIGURATION"
-        );
-
-        System.out.println(
-                "krb5.conf = " +
-                System.getProperty(
-                        "java.security.krb5.conf"
-                )
-        );
-
-        System.out.println(
-                "JAAS      = " +
-                System.getProperty(
-                        "java.security.auth.login.config"
-                )
-        );
-
-        System.out.println(
-                "Principal = " +
-                KRB_PRINCIPAL
-        );
-
-        System.out.println(
-                "Keytab    = " +
-                KEYTAB_FILE
-        );
-
-        System.out.println(
-                "========================================"
-        );
-    }
-
-    /*
-     * -------------------------------------------------
-     * Validate local files before attempting Kerberos.
-     * -------------------------------------------------
-     */
-    private void validateSecurityFiles() {
-
-        File krb5File =
-                new File(
-                        KRB5_CONFIG
-                );
-
-        File jaasFile =
-                new File(
-                        JAAS_CONFIG
-                );
-
-        File keytabFile =
-                new File(
-                        KEYTAB_FILE
-                );
-
-        File truststoreFile =
-                new File(
-                        TRUSTSTORE_FILE
-                );
-
-        System.out.println(
-                "krb5 exists       = " +
-                krb5File.exists()
-        );
-
-        System.out.println(
-                "JAAS exists       = " +
-                jaasFile.exists()
-        );
-
-        System.out.println(
-                "Keytab exists     = " +
-                keytabFile.exists()
-        );
-
-        System.out.println(
-                "Truststore exists = " +
-                truststoreFile.exists()
-        );
-
-        if (!krb5File.exists()) {
-
-            throw new IllegalStateException(
-                    "Kerberos configuration file not found: " +
-                    KRB5_CONFIG
-            );
-        }
-
-        if (!jaasFile.exists()) {
-
-            throw new IllegalStateException(
-                    "JAAS configuration file not found: " +
-                    JAAS_CONFIG
-            );
-        }
-
-        if (!keytabFile.exists()) {
-
-            throw new IllegalStateException(
-                    "Kerberos keytab not found: " +
-                    KEYTAB_FILE
-            );
-        }
-
-        if (!truststoreFile.exists()) {
-
-            throw new IllegalStateException(
-                    "SSL truststore not found: " +
-                    TRUSTSTORE_FILE
-            );
-        }
-    }
-
-    /*
-     * -------------------------------------------------
-     * Explicit JAAS Kerberos test
-     * -------------------------------------------------
-     */
-    private void testKerberosLogin() {
-
-        System.out.println();
-        System.out.println(
-                "Testing JAAS Client Kerberos login..."
-        );
-
-        try {
-
-            LoginContext loginContext =
-                    new LoginContext(
-                            "Client"
-                    );
-
-            loginContext.login();
-
-            System.out.println(
-                    "JAAS Kerberos login SUCCESS"
-            );
-
-            System.out.println(
-                    "Authenticated subject = " +
-                    loginContext.getSubject()
-            );
-
-        } catch (LoginException e) {
-
-            System.err.println(
-                    "JAAS Kerberos login FAILED"
-            );
-
-            e.printStackTrace();
-
-            throw new IllegalStateException(
-                    "Kerberos JAAS login failed for principal " +
-                    KRB_PRINCIPAL,
-                    e
-            );
-        }
-    }
-
-    /*
-     * -------------------------------------------------
-     * READ stress query
-     * -------------------------------------------------
-     */
-    public int executeQuery(String rowKey)
-            throws SQLException {
-
-        int rowCount =
-                0;
-
-        String sql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        try (
-                Connection conn =
-                        readDataSource
-                                .getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(
-                                sql
-                        )
-        ) {
-
-            stmt.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet result =
-                            stmt.executeQuery()
-            ) {
-
-                while (
-                        result.next()
-                ) {
-
-                    rowCount++;
-                }
-            }
-        }
-
-        return rowCount;
-    }
-
-    /*
-     * -------------------------------------------------
-     * WRITE stress query
-     *
-     * Performs:
-     *
-     * 1. SELECT
-     * 2. INSERT
-     *
-     * against the production customer_keys table.
-     * -------------------------------------------------
-     */
-    public int executeInsert(String rowKey)
-            throws SQLException {
-
-        String readSql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        String writeSql =
-                "INSERT INTO dev_cnsmr_lo.customer_keys " +
-                "(row_key, country, postcode) " +
-                "VALUES (?, 'qw_EG', 'qw_11511')";
-
-        try (
-                Connection conn =
-                        writeDataSource
-                                .getConnection();
-
-                PreparedStatement readStmt =
-                        conn.prepareStatement(
-                                readSql
-                        );
-
-                PreparedStatement writeStmt =
-                        conn.prepareStatement(
-                                writeSql
-                        )
-        ) {
-
-            /*
-             * Execute READ first
-             */
-            readStmt.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet result =
-                            readStmt.executeQuery()
-            ) {
-
-                /*
-                 * Consume result set.
-                 *
-                 * This ensures the read is actually completed.
-                 */
-                while (
-                        result.next()
-                ) {
-                    // No processing required.
-                }
-            }
-
-            /*
-             * Execute WRITE
-             */
-            writeStmt.setString(
-                    1,
-                    rowKey
-            );
-
-            return writeStmt
-                    .executeUpdate();
-        }
-    }
-
-    /*
-     * -------------------------------------------------
-     * Hikari pool metrics
-     * -------------------------------------------------
-     */
-    public void printPoolStatus() {
-
-        HikariPoolMXBean readBean =
-                readDataSource
-                        .getHikariPoolMXBean();
-
-        if (readBean != null) {
-
-            System.out.printf(
-                    "[Worker %d][%s] " +
-                    "Total: %d | " +
-                    "Active: %d | " +
-                    "Idle: %d | " +
-                    "Waiting: %d%n",
-
-                    workerNodeId,
-
-                    readDataSource
-                            .getPoolName(),
-
-                    readBean
-                            .getTotalConnections(),
-
-                    readBean
-                            .getActiveConnections(),
-
-                    readBean
-                            .getIdleConnections(),
-
-                    readBean
-                            .getThreadsAwaitingConnection()
-            );
-        }
-
-        HikariPoolMXBean writeBean =
-                writeDataSource
-                        .getHikariPoolMXBean();
-
-        if (writeBean != null) {
-
-            System.out.printf(
-                    "[Worker %d][%s] " +
-                    "Total: %d | " +
-                    "Active: %d | " +
-                    "Idle: %d | " +
-                    "Waiting: %d%n",
-
-                    workerNodeId,
-
-                    writeDataSource
-                            .getPoolName(),
-
-                    writeBean
-                            .getTotalConnections(),
-
-                    writeBean
-                            .getActiveConnections(),
-
-                    writeBean
-                            .getIdleConnections(),
-
-                    writeBean
-                            .getThreadsAwaitingConnection()
-            );
-        }
-    }
-
-    public String getHost() {
-
-        return host;
-    }
-
-    public int getWorkerNodeId() {
-
-        return workerNodeId;
-    }
-
-    /*
-     * -------------------------------------------------
-     * Close pools cleanly
-     * -------------------------------------------------
-     */
-    public void closeDataSource() {
-
-        if (
-                readDataSource != null &&
-                !readDataSource.isClosed()
-        ) {
-
-            readDataSource.close();
-        }
-
-        if (
-                writeDataSource != null &&
-                !writeDataSource.isClosed()
-        ) {
-
-            writeDataSource.close();
-        }
-    }
-}
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>mvn exec:java -Dexec.mainClass="com.cib.impalaStressTester.ImpalaStressTester"
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
+[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+
+[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
+[INFO]
+[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
+========================================
+KERBEROS CONFIGURATION
+krb5.conf = C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini
+JAAS      = C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf
+Principal = moba42876@HODOMAIN.LOCAL
+Keytab    = C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab
+========================================
+krb5 exists       = true
+JAAS exists       = true
+Keytab exists     = true
+Truststore exists = true
+
+Testing JAAS Client Kerberos login...
+Debug is  true storeKey true useTicketCache false useKeyTab true doNotPrompt true ticketCache is null isInitiator true KeyTab is C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab refreshKrb5Config is true principal is moba42876@HODOMAIN.LOCAL tryFirstPass is false useFirstPass is false storePass is false clearPass is false
+Refreshing Kerberos configuration
+Java config name: C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini
+Loading krb5 profile at C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2\securityConfigs\kerb5.ini
+Loaded from Java config
+>>> KdcAccessibility: reset
+>>> KdcAccessibility: reset
+>>> KeyTabInputStream, readName(): HODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): moba42876
+>>> KeyTab: load() entry length: 62; type: 17
+>>> KeyTabInputStream, readName(): HODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): moba42876
+>>> KeyTab: load() entry length: 78; type: 18
+>>> KeyTabInputStream, readName(): HODOMAIN.LOCAL
+>>> KeyTabInputStream, readName(): moba4287
+>>> KeyTab: load() entry length: 77; type: 18
+Looking for keys for: moba42876@HODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+Looking for keys for: moba42876@HODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+default etypes for default_tkt_enctypes: 18.
+>>> KrbAsReq creating message
+>>> KrbKdcReq send: kdc=svhobr01.hodomain.local TCP:88, timeout=3000, number of retries =3, #bytes=163
+>>> KDCCommunication: kdc=svhobr01.hodomain.local TCP:88, timeout=3000,Attempt =1, #bytes=163
+>>>DEBUG: TCPClient reading 188 bytes
+>>> KrbKdcReq send: #bytes read=188
+>>>Pre-Authentication Data:
+         PA-DATA type = 19
+         PA-ETYPE-INFO2 etype = 18, salt = HODOMAIN.LOCALMOBA42876, s2kparams = null
+
+>>>Pre-Authentication Data:
+         PA-DATA type = 2
+         PA-ENC-TIMESTAMP
+>>>Pre-Authentication Data:
+         PA-DATA type = 16
+
+>>>Pre-Authentication Data:
+         PA-DATA type = 15
+
+>>> KdcAccessibility: remove svhobr01.hodomain.local
+>>> KDCRep: init() encoding tag is 126 req type is 11
+>>>KRBError:
+         sTime is Tue Oct 06 12:13:44 EEST 2026 1791278024000
+         suSec is 824733
+         error code is 25
+         error Message is Additional pre-authentication required
+         sname is krbtgt/HODOMAIN.LOCAL@HODOMAIN.LOCAL
+         eData provided.
+         msgType is 30
+>>>Pre-Authentication Data:
+         PA-DATA type = 19
+         PA-ETYPE-INFO2 etype = 18, salt = HODOMAIN.LOCALMOBA42876, s2kparams = null
+
+>>>Pre-Authentication Data:
+         PA-DATA type = 2
+         PA-ENC-TIMESTAMP
+>>>Pre-Authentication Data:
+         PA-DATA type = 16
+
+>>>Pre-Authentication Data:
+         PA-DATA type = 15
+
+KrbAsReqBuilder: PREAUTH FAILED/REQ, re-send AS-REQ
+default etypes for default_tkt_enctypes: 18.
+Looking for keys for: moba42876@HODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+Looking for keys for: moba42876@HODOMAIN.LOCAL
+Added key: 18version: 1
+Added key: 17version: 1
+default etypes for default_tkt_enctypes: 18.
+>>> EType: sun.security.krb5.internal.crypto.Aes256CtsHmacSha1EType
+>>> KrbAsReq creating message
+>>> KrbKdcReq send: kdc=svhobr01.hodomain.local TCP:88, timeout=3000, number of retries =3, #bytes=250
+>>> KDCCommunication: kdc=svhobr01.hodomain.local TCP:88, timeout=3000,Attempt =1, #bytes=250
+>>>DEBUG: TCPClient reading 155 bytes
+>>> KrbKdcReq send: #bytes read=155
+>>>Pre-Authentication Data:
+         PA-DATA type = 19
+         PA-ETYPE-INFO2 etype = 18, salt = HODOMAIN.LOCALMOBA42876, s2kparams = null
+
+>>> KdcAccessibility: remove svhobr01.hodomain.local
+>>> KDCRep: init() encoding tag is 126 req type is 11
+>>>KRBError:
+         sTime is Tue Oct 06 12:13:44 EEST 2026 1791278024000
+         suSec is 127261
+         error code is 24
+         error Message is Pre-authentication information was invalid
+         sname is krbtgt/HODOMAIN.LOCAL@HODOMAIN.LOCAL
+         eData provided.
+         msgType is 30
+>>>Pre-Authentication Data:
+         PA-DATA type = 19
+         PA-ETYPE-INFO2 etype = 18, salt = HODOMAIN.LOCALMOBA42876, s2kparams = null
+
+                [Krb5LoginModule] authentication failed
+Pre-authentication information was invalid (24)
+JAAS Kerberos login FAILED
+javax.security.auth.login.LoginException: Pre-authentication information was invalid (24)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:779)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.login(Krb5LoginModule.java:591)
+        at java.base/javax.security.auth.login.LoginContext.invoke(LoginContext.java:747)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:672)
+        at java.base/javax.security.auth.login.LoginContext$4.run(LoginContext.java:670)
+        at java.base/java.security.AccessController.doPrivileged(AccessController.java:688)
+        at java.base/javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:670)
+        at java.base/javax.security.auth.login.LoginContext.login(LoginContext.java:581)
+        at com.cib.impalaStressTester.ImpalaService.testKerberosLogin(ImpalaService.java:438)
+        at com.cib.impalaStressTester.ImpalaService.<init>(ImpalaService.java:126)
+        at com.cib.impalaStressTester.ImpalaStressTester.main(ImpalaStressTester.java:27)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod(AbstractExecJavaBase.java:402)
+        at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod(ExecJavaMojo.java:142)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader(AbstractExecJavaBase.java:377)
+        at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0(AbstractExecJavaBase.java:287)
+        at java.base/java.lang.Thread.run(Thread.java:834)
+Caused by: KrbException: Pre-authentication information was invalid (24)
+        at java.security.jgss/sun.security.krb5.KrbAsRep.<init>(KrbAsRep.java:76)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.send(KrbAsReqBuilder.java:345)
+        at java.security.jgss/sun.security.krb5.KrbAsReqBuilder.action(KrbAsReqBuilder.java:498)
+        at jdk.security.auth/com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication(Krb5LoginModule.java:755)
+        ... 19 more
+Caused by: KrbException: Identifier doesn't match expected value (906)
+        at java.security.jgss/sun.security.krb5.internal.KDCRep.init(KDCRep.java:140)
+        at java.security.jgss/sun.security.krb5.internal.ASRep.init(ASRep.java:64)
+        at java.security.jgss/sun.security.krb5.internal.ASRep.<init>(ASRep.java:59)
+        at java.security.jgss/sun.security.krb5.KrbAsRep.<init>(KrbAsRep.java:60)
+        ... 22 more
+[WARNING]
+java.lang.IllegalStateException: Kerberos JAAS login failed for principal moba42876@HODOMAIN.LOCAL
+    at com.cib.impalaStressTester.ImpalaService.testKerberosLogin (ImpalaService.java:457)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:126)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: javax.security.auth.login.LoginException: Pre-authentication information was invalid (24)
+    at com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication (Krb5LoginModule.java:779)
+    at com.sun.security.auth.module.Krb5LoginModule.login (Krb5LoginModule.java:591)
+    at javax.security.auth.login.LoginContext.invoke (LoginContext.java:747)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:672)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:670)
+    at java.security.AccessController.doPrivileged (AccessController.java:688)
+    at javax.security.auth.login.LoginContext.invokePriv (LoginContext.java:670)
+    at javax.security.auth.login.LoginContext.login (LoginContext.java:581)
+    at com.cib.impalaStressTester.ImpalaService.testKerberosLogin (ImpalaService.java:438)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:126)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: sun.security.krb5.KrbException: Pre-authentication information was invalid (24)
+    at sun.security.krb5.KrbAsRep.<init> (KrbAsRep.java:76)
+    at sun.security.krb5.KrbAsReqBuilder.send (KrbAsReqBuilder.java:345)
+    at sun.security.krb5.KrbAsReqBuilder.action (KrbAsReqBuilder.java:498)
+    at com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication (Krb5LoginModule.java:755)
+    at com.sun.security.auth.module.Krb5LoginModule.login (Krb5LoginModule.java:591)
+    at javax.security.auth.login.LoginContext.invoke (LoginContext.java:747)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:672)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:670)
+    at java.security.AccessController.doPrivileged (AccessController.java:688)
+    at javax.security.auth.login.LoginContext.invokePriv (LoginContext.java:670)
+    at javax.security.auth.login.LoginContext.login (LoginContext.java:581)
+    at com.cib.impalaStressTester.ImpalaService.testKerberosLogin (ImpalaService.java:438)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:126)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: sun.security.krb5.Asn1Exception: Identifier doesn't match expected value (906)
+    at sun.security.krb5.internal.KDCRep.init (KDCRep.java:140)
+    at sun.security.krb5.internal.ASRep.init (ASRep.java:64)
+    at sun.security.krb5.internal.ASRep.<init> (ASRep.java:59)
+    at sun.security.krb5.KrbAsRep.<init> (KrbAsRep.java:60)
+    at sun.security.krb5.KrbAsReqBuilder.send (KrbAsReqBuilder.java:345)
+    at sun.security.krb5.KrbAsReqBuilder.action (KrbAsReqBuilder.java:498)
+    at com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication (Krb5LoginModule.java:755)
+    at com.sun.security.auth.module.Krb5LoginModule.login (Krb5LoginModule.java:591)
+    at javax.security.auth.login.LoginContext.invoke (LoginContext.java:747)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:672)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:670)
+    at java.security.AccessController.doPrivileged (AccessController.java:688)
+    at javax.security.auth.login.LoginContext.invokePriv (LoginContext.java:670)
+    at javax.security.auth.login.LoginContext.login (LoginContext.java:581)
+    at com.cib.impalaStressTester.ImpalaService.testKerberosLogin (ImpalaService.java:438)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:126)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.772 s
+[INFO] Finished at: 2026-10-06T12:13:45+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Kerberos JAAS login failed for principal moba42876@HODOMAIN.LOCAL: Pre-authentication information was invalid (24): Identifier doesn't match expected value (906) -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
