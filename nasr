@@ -1,155 +1,223 @@
-Yes. For production, I’d stop hard-coding the UAT load balancer and make the target workers explicit so the same JAR can stress:
+package com.cib.impalaStressTester;
 
-cdp-p-wrkr1.hodomain.local
-cdp-p-wrkr2.hodomain.local
-cdp-p-wrkr3.hodomain.local
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 
-A clean approach is to keep workerNodeId and build the hostname from it:
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-String host = "cdp-p-wrkr" + workerNodeId + ".hodomain.local";
+public class ImpalaService {
 
-Then your JDBC URL becomes:
+    private final HikariDataSource readDataSource;
+    private final HikariDataSource writeDataSource;
 
-String jdbcUrl =
-        "jdbc:impala://" + host + ":21050/DEV_CNSMR_LO" +
-        ";AuthMech=1" +
-        ";KrbAuthType=2" +
-        ";KrbRealm=HODOMAIN.LOCAL" +
-        ";KrbHostFQDN=" + host +
-        ";KrbServiceName=impala" +
-        ";SSL=1" +
-        ";SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks" +
-        ";SSLTrustStorePwd=CDPEIMPASS" +
-        ";UseNativeQuery=1;";
+    private static final String HOST =
+            "master-vm-cdp01-uat-app-387066.hodomain.local";
 
-So:
-
-new ImpalaService(1)
-
-targets:
-
-cdp-p-wrkr1.hodomain.local
-
-and:
-
-new ImpalaService(2)
-
-targets:
-
-cdp-p-wrkr2.hodomain.local
-
-and:
-
-new ImpalaService(3)
-
-targets:
-
-cdp-p-wrkr3.hodomain.local
-
-I’d change your constructor to this:
-
-public ImpalaService(int workerNodeId) {
-
-    if (workerNodeId < 1 || workerNodeId > 3) {
-        throw new IllegalArgumentException(
-                "workerNodeId must be 1, 2, or 3"
-        );
-    }
-
-    String host =
-            "cdp-p-wrkr" + workerNodeId + ".hodomain.local";
-
-    String jdbcUrl =
-            "jdbc:impala://" + host + ":21050/DEV_CNSMR_LO" +
+    private static final String JDBC_URL =
+            "jdbc:impala://" + HOST + ":21050/DEV_CNSMR_LO" +
             ";AuthMech=1" +
-            ";KrbAuthType=2" +
+            ";KrbAuthType=1" +
             ";KrbRealm=HODOMAIN.LOCAL" +
-            ";KrbHostFQDN=" + host +
+            ";KrbHostFQDN=" + HOST +
             ";KrbServiceName=impala" +
+            ";KrbPrincipal=moba42876@HODOMAIN.LOCAL" +
+            ";KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab" +
             ";SSL=1" +
-            ";SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks" +
+            ";SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks" +
             ";SSLTrustStorePwd=CDPEIMPASS" +
             ";UseNativeQuery=1;";
 
-    System.out.println("========================================");
-    System.out.println("PRODUCTION IMPALA STRESS TEST");
-    System.out.println("Worker       = " + workerNodeId);
-    System.out.println("Impala host  = " + host);
-    System.out.println("JDBC URL     = " + jdbcUrl);
-    System.out.println("========================================");
+    public ImpalaService(int workerNodeId) {
 
-    HikariConfig readConfig =
-            createBaseConfig(jdbcUrl);
+        System.setProperty(
+                "java.security.krb5.conf",
+                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini"
+        );
 
-    readConfig.setPoolName(
-            "HikariPool-Read-wrkr" + workerNodeId
-    );
+        System.setProperty(
+                "java.security.auth.login.config",
+                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf"
+        );
 
-    readConfig.setMaximumPoolSize(50);
-    readConfig.setConnectionTimeout(10000);
+        System.setProperty(
+                "javax.security.auth.useSubjectCredsOnly",
+                "false"
+        );
 
-    this.readDataSource =
-            new HikariDataSource(readConfig);
+        System.out.println("========================================");
+        System.out.println("NEW IMPALA SERVICE LOADED");
+        System.out.println("JDBC URL = " + JDBC_URL);
+        System.out.println("========================================");
 
-    HikariConfig writeConfig =
-            createBaseConfig(jdbcUrl);
+        HikariConfig readConfig = createBaseConfig();
 
-    writeConfig.setPoolName(
-            "HikariPool-Write-wrkr" + workerNodeId
-    );
+        readConfig.setPoolName("HikariPool-Read");
+        readConfig.setMaximumPoolSize(50);
+        readConfig.setConnectionTimeout(10000);
 
-    writeConfig.setMaximumPoolSize(14);
-    writeConfig.setConnectionTimeout(10000);
+        this.readDataSource =
+                new HikariDataSource(readConfig);
 
-    this.writeDataSource =
-            new HikariDataSource(writeConfig);
+        HikariConfig writeConfig = createBaseConfig();
+
+        writeConfig.setPoolName("HikariPool-Write");
+        writeConfig.setMaximumPoolSize(14);
+        writeConfig.setConnectionTimeout(10000);
+
+        this.writeDataSource =
+                new HikariDataSource(writeConfig);
+    }
+
+    private HikariConfig createBaseConfig() {
+
+        HikariConfig config =
+                new HikariConfig();
+
+        config.setDriverClassName(
+                "com.cloudera.impala.jdbc41.Driver"
+        );
+
+        config.setJdbcUrl(
+                JDBC_URL
+        );
+
+        config.setConnectionTimeout(
+                10000
+        );
+
+        config.setValidationTimeout(
+                5000
+        );
+
+        config.setConnectionTestQuery(
+                "SELECT 1"
+        );
+
+        return config;
+    }
+
+    public void printPoolStatus() {
+
+        HikariPoolMXBean readBean =
+                readDataSource.getHikariPoolMXBean();
+
+        if (readBean != null) {
+
+            System.out.printf(
+                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
+                    readDataSource.getPoolName(),
+                    readBean.getTotalConnections(),
+                    readBean.getActiveConnections(),
+                    readBean.getIdleConnections(),
+                    readBean.getThreadsAwaitingConnection()
+            );
+        }
+
+        HikariPoolMXBean writeBean =
+                writeDataSource.getHikariPoolMXBean();
+
+        if (writeBean != null) {
+
+            System.out.printf(
+                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
+                    writeDataSource.getPoolName(),
+                    writeBean.getTotalConnections(),
+                    writeBean.getActiveConnections(),
+                    writeBean.getIdleConnections(),
+                    writeBean.getThreadsAwaitingConnection()
+            );
+        }
+    }
+
+    public int executeQuery(String rowKey)
+            throws SQLException {
+
+        int rowCount = 0;
+
+        String sql =
+                "SELECT shortname, country, postcode " +
+                "FROM dev_cnsmr_lo.customer_keys " +
+                "WHERE row_key = ?";
+
+        try (
+                Connection conn =
+                        readDataSource.getConnection();
+
+                PreparedStatement stmt =
+                        conn.prepareStatement(sql)
+        ) {
+
+            stmt.setString(1, rowKey);
+
+            try (
+                    ResultSet result =
+                            stmt.executeQuery()
+            ) {
+
+                while (result.next()) {
+                    rowCount++;
+                }
+            }
+        }
+
+        return rowCount;
+    }
+
+    public int executeInsert(String rowKey)
+            throws SQLException {
+
+        String readSql =
+                "SELECT shortname, country, postcode " +
+                "FROM dev_cnsmr_lo.customer_keys " +
+                "WHERE row_key = ?";
+
+        String writeSql =
+                "INSERT INTO dev_cnsmr_lo.customer_keys " +
+                "(row_key, country, postcode) " +
+                "VALUES (?, 'qw_EG', 'qw_11511')";
+
+        try (
+                Connection conn =
+                        writeDataSource.getConnection();
+
+                PreparedStatement readStmt =
+                        conn.prepareStatement(readSql);
+
+                PreparedStatement writeStmt =
+                        conn.prepareStatement(writeSql)
+        ) {
+
+            readStmt.setString(1, rowKey);
+
+            try (
+                    ResultSet result =
+                            readStmt.executeQuery()
+            ) {
+                // execute read
+            }
+
+            writeStmt.setString(1, rowKey);
+
+            return writeStmt.executeUpdate();
+        }
+    }
+
+    public void closeDataSource() {
+
+        if (readDataSource != null &&
+                !readDataSource.isClosed()) {
+
+            readDataSource.close();
+        }
+
+        if (writeDataSource != null &&
+                !writeDataSource.isClosed()) {
+
+            writeDataSource.close();
+        }
+    }
 }
-
-Because you're using:
-
-KrbAuthType=2
-
-remember to prepare the production Kerberos ticket before starting the JAR:
-
-export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
-export KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)
-
-kinit -kt \
-/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
-rise37432@HODOMAIN.LOCAL
-
-klist
-
-Then verify each production worker before stressing it:
-
-nc -vz cdp-p-wrkr1.hodomain.local 21050
-nc -vz cdp-p-wrkr2.hodomain.local 21050
-nc -vz cdp-p-wrkr3.hodomain.local 21050
-
-I would also obtain the service tickets once to verify Kerberos:
-
-kvno impala/cdp-p-wrkr1.hodomain.local@HODOMAIN.LOCAL
-kvno impala/cdp-p-wrkr2.hodomain.local@HODOMAIN.LOCAL
-kvno impala/cdp-p-wrkr3.hodomain.local@HODOMAIN.LOCAL
-
-For production, I strongly recommend starting with a deliberately low stress level—e.g. 5–10 concurrent queries, then 20, 30, etc.—while watching the Impala metrics. Don't immediately reuse a UAT setting such as 50 read + 14 write connections against production.
-
-Also, for the Prometheus pilot we planned, these same three hosts become your production scrape targets:
-
-static_configs:
-  - targets:
-      - "cdp-p-wrkr1.hodomain.local:25000"
-    labels:
-      worker: "wrkr1"
-
-  - targets:
-      - "cdp-p-wrkr2.hodomain.local:25000"
-    labels:
-      worker: "wrkr2"
-
-  - targets:
-      - "cdp-p-wrkr3.hodomain.local:25000"
-    labels:
-      worker: "wrkr3"
-
-One architectural choice matters: if the goal is to test production load-balancer distribution, you should keep JDBC pointed at the production LB and monitor these three workers. If the goal is to benchmark each worker individually, direct JDBC to wrkr1, wrkr2, and wrkr3 as above. Those are two different tests.
