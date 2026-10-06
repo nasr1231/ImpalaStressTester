@@ -145,5 +145,19 @@ public int executeInsert(String rowKey) throws SQLException {
 For your stress tester, this is a better workload pattern than random relational-style scans: high-volume point reads by row_key plus repeated inserts using generated HBase row keys.
 
 
-ParseException: Syntax error in line 8:undefined: STORED BY 'org.apache.hadoop.hive.hbas... ^ Encountered: STRING LITERAL Expected: ICEBERG, KUDU CAUSED BY: Exception: Syntax error
-
+CREATE EXTERNAL TABLE dev_cnsmr_lo.impala_stress_test (
+    row_key STRING,
+    shortname STRING,
+    country STRING,
+    postcode STRING,
+    test_value BIGINT
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+    "hbase.columns.mapping" =
+    ":key,cf:shortname,cf:country,cf:postcode,cf:test_value"
+)
+TBLPROPERTIES (
+    "hbase.table.name" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST",
+    "hbase.mapred.output.outputtable" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST"
+);
