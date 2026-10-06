@@ -1,393 +1,104 @@
-package com.cib.impalaStressTester;
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+
+[WARNING] 2 problems were encountered while building the effective model for org.apache.yetus:audience-annotations:jar:0.5.0 during dependency collection step for project (use -X to see details)
+[INFO]
+[INFO] --- exec:3.6.4:java (default-cli) @ ImpalaStressTesting ---
+========================================
+PRODUCTION IMPALA STRESS TEST
+Worker ID : 2
+Host      : cdp-p-wrkr2.hodomain.local
+Database  : DEV_CNSMR_LO
+JDBC URL  : jdbc:impala://cdp-p-wrkr2.hodomain.local:21050/DEV_CNSMR_LO;AuthMech=1;KrbAuthType=1;KrbRealm=HODOMAIN.LOCAL;KrbHostFQDN=cdp-p-wrkr2.hodomain.local;KrbServiceName=impala;KrbPrincipal=moba42876@HODOMAIN.LOCAL;KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab;SSL=1;SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks;SSLTrustStorePwd=CDPEIMPASS;UseNativeQuery=1;
+========================================
+SLF4J: No SLF4J providers were found.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#noProviders for further details.
+SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions prior to 1.8.
+SLF4J: Ignoring binding found at [jar:file:/C:/Users/MOBA42876/.m2/repository/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+[WARNING]
+com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Unable to obtain password from user
+.
+    at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException (HikariPool.java:596)
+    at com.zaxxer.hikari.pool.HikariPool.checkFailFast (HikariPool.java:582)
+    at com.zaxxer.hikari.pool.HikariPool.<init> (HikariPool.java:115)
+    at com.zaxxer.hikari.HikariDataSource.<init> (HikariDataSource.java:81)
+    at com.cib.impalaStressTester.ImpalaService.<init> (ImpalaService.java:149)
+    at com.cib.impalaStressTester.ImpalaStressTester.main (ImpalaStressTester.java:27)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0 (Native Method)
+    at jdk.internal.reflect.NativeMethodAccessorImpl.invoke (NativeMethodAccessorImpl.java:62)
+    at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke (DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke (Method.java:566)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.executeMainMethod (AbstractExecJavaBase.java:402)
+    at org.codehaus.mojo.exec.ExecJavaMojo.executeMainMethod (ExecJavaMojo.java:142)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.doExecClassLoader (AbstractExecJavaBase.java:377)
+    at org.codehaus.mojo.exec.AbstractExecJavaBase.lambda$execute$0 (AbstractExecJavaBase.java:287)
+    at java.lang.Thread.run (Thread.java:834)
+Caused by: java.sql.SQLException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Unable to obtain password from user
+.
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: com.cloudera.impala.support.exceptions.GeneralException: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Unable to obtain password from user
+.
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+Caused by: javax.security.auth.login.LoginException: Unable to obtain password from user
+
+    at com.sun.security.auth.module.Krb5LoginModule.promptForPass (Krb5LoginModule.java:872)
+    at com.sun.security.auth.module.Krb5LoginModule.attemptAuthentication (Krb5LoginModule.java:739)
+    at com.sun.security.auth.module.Krb5LoginModule.login (Krb5LoginModule.java:591)
+    at javax.security.auth.login.LoginContext.invoke (LoginContext.java:747)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:672)
+    at javax.security.auth.login.LoginContext$4.run (LoginContext.java:670)
+    at java.security.AccessController.doPrivileged (AccessController.java:688)
+    at javax.security.auth.login.LoginContext.invokePriv (LoginContext.java:670)
+    at javax.security.auth.login.LoginContext.login (LoginContext.java:581)
+    at com.cloudera.impala.jdbc.kerberos.Kerberos.getSubjectViaJAASConfig (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createTransport (Unknown Source)
+    at com.cloudera.impala.hivecommon.api.HiveServer2ClientFactory.createClient (Unknown Source)
+    at com.cloudera.impala.hivecommon.core.HiveJDBCCommonConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.impala.core.ImpalaJDBCConnection.establishConnection (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at com.cloudera.impala.jdbc.core.LoginTimeoutConnection$1.call (Unknown Source)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:264)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1128)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:628)
+    at java.lang.Thread.run (Thread.java:834)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.013 s
+[INFO] Finished at: 2026-10-06T11:53:38+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:3.6.4:java (default-cli) on project ImpalaStressTesting: An exception occurred while executing the Java class. Failed to initialize pool: [Cloudera][ImpalaJDBCDriver](500166) Error creating login context using JAAS configuration: Unable to obtain password from user
+[ERROR] .
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+C:\Users\MOBA42876\Documents\ImpalaStressTester_wrkr2>
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.HikariPoolMXBean;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-public class ImpalaService {
-
-    private final HikariDataSource readDataSource;
-    private final HikariDataSource writeDataSource;
-
-    private static final String DATABASE = "DEV_CNSMR_LO";
-
-    private static final String KRB_REALM =
-            "HODOMAIN.LOCAL";
-
-    private static final String KRB_PRINCIPAL =
-            "moba42876@HODOMAIN.LOCAL";
-
-    private static final String KRB5_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini";
-
-    private static final String JAAS_CONFIG =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf";
-
-    private static final String KEYTAB_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab";
-
-    private static final String TRUSTSTORE_FILE =
-            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks";
-
-    private static final String TRUSTSTORE_PASSWORD =
-            "CDPEIMPASS";
-
-    private final int workerNodeId;
-    private final String host;
-    private final String jdbcUrl;
-
-    public ImpalaService(int workerNodeId) {
-
-        /*
-         * Production workers:
-         *
-         * 1 -> cdp-p-wrkr1.hodomain.local
-         * 2 -> cdp-p-wrkr2.hodomain.local
-         * 3 -> cdp-p-wrkr3.hodomain.local
-         */
-        if (workerNodeId < 1 || workerNodeId > 3) {
-            throw new IllegalArgumentException(
-                    "Invalid workerNodeId: " + workerNodeId +
-                    ". Allowed values are 1, 2, or 3."
-            );
-        }
-
-        this.workerNodeId = workerNodeId;
-
-        this.host =
-                "cdp-p-wrkr" +
-                workerNodeId +
-                ".hodomain.local";
-
-        /*
-         * JVM Kerberos configuration
-         */
-        System.setProperty(
-                "java.security.krb5.conf",
-                KRB5_CONFIG
-        );
-
-        System.setProperty(
-                "java.security.auth.login.config",
-                JAAS_CONFIG
-        );
-
-        System.setProperty(
-                "javax.security.auth.useSubjectCredsOnly",
-                "false"
-        );
-
-        /*
-         * Production Impala JDBC URL
-         */
-        this.jdbcUrl =
-                "jdbc:impala://" +
-                host +
-                ":21050/" +
-                DATABASE +
-
-                ";AuthMech=1" +
-
-                // JAAS / keytab Kerberos authentication
-                ";KrbAuthType=1" +
-
-                ";KrbRealm=" +
-                KRB_REALM +
-
-                ";KrbHostFQDN=" +
-                host +
-
-                ";KrbServiceName=impala" +
-
-                ";KrbPrincipal=" +
-                KRB_PRINCIPAL +
-
-                ";KrbKeytabFile=" +
-                KEYTAB_FILE +
-
-                // TLS
-                ";SSL=1" +
-
-                ";SSLTrustStore=" +
-                TRUSTSTORE_FILE +
-
-                ";SSLTrustStorePwd=" +
-                TRUSTSTORE_PASSWORD +
-
-                ";UseNativeQuery=1;";
-
-        System.out.println("========================================");
-        System.out.println("PRODUCTION IMPALA STRESS TEST");
-        System.out.println("Worker ID : " + workerNodeId);
-        System.out.println("Host      : " + host);
-        System.out.println("Database  : " + DATABASE);
-        System.out.println("JDBC URL  : " + jdbcUrl);
-        System.out.println("========================================");
-
-        /*
-         * READ connection pool
-         */
-        HikariConfig readConfig =
-                createBaseConfig();
-
-        readConfig.setPoolName(
-                "HikariPool-Read-wrkr" +
-                workerNodeId
-        );
-
-        readConfig.setMaximumPoolSize(50);
-
-        readConfig.setConnectionTimeout(
-                10000
-        );
-
-        this.readDataSource =
-                new HikariDataSource(
-                        readConfig
-                );
-
-        /*
-         * WRITE connection pool
-         */
-        HikariConfig writeConfig =
-                createBaseConfig();
-
-        writeConfig.setPoolName(
-                "HikariPool-Write-wrkr" +
-                workerNodeId
-        );
-
-        writeConfig.setMaximumPoolSize(14);
-
-        writeConfig.setConnectionTimeout(
-                10000
-        );
-
-        this.writeDataSource =
-                new HikariDataSource(
-                        writeConfig
-                );
-    }
-
-    private HikariConfig createBaseConfig() {
-
-        HikariConfig config =
-                new HikariConfig();
-
-        config.setDriverClassName(
-                "com.cloudera.impala.jdbc41.Driver"
-        );
-
-        config.setJdbcUrl(
-                jdbcUrl
-        );
-
-        config.setConnectionTimeout(
-                10000
-        );
-
-        config.setValidationTimeout(
-                5000
-        );
-
-        config.setConnectionTestQuery(
-                "SELECT 1"
-        );
-
-        return config;
-    }
-
-    /**
-     * Stress-test SELECT.
-     *
-     * Executes a point lookup against the production HBase-backed
-     * customer_keys table.
-     */
-    public int executeQuery(String rowKey)
-            throws SQLException {
-
-        int rowCount = 0;
-
-        String sql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        try (
-                Connection conn =
-                        readDataSource.getConnection();
-
-                PreparedStatement stmt =
-                        conn.prepareStatement(sql)
-        ) {
-
-            stmt.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet result =
-                            stmt.executeQuery()
-            ) {
-
-                while (result.next()) {
-                    rowCount++;
-                }
-            }
-        }
-
-        return rowCount;
-    }
-
-    /**
-     * Stress-test WRITE.
-     *
-     * First performs a read and then inserts the test row.
-     */
-    public int executeInsert(String rowKey)
-            throws SQLException {
-
-        String readSql =
-                "SELECT shortname, country, postcode " +
-                "FROM dev_cnsmr_lo.customer_keys " +
-                "WHERE row_key = ?";
-
-        String writeSql =
-                "INSERT INTO dev_cnsmr_lo.customer_keys " +
-                "(row_key, country, postcode) " +
-                "VALUES (?, 'qw_EG', 'qw_11511')";
-
-        try (
-                Connection conn =
-                        writeDataSource.getConnection();
-
-                PreparedStatement readStmt =
-                        conn.prepareStatement(
-                                readSql
-                        );
-
-                PreparedStatement writeStmt =
-                        conn.prepareStatement(
-                                writeSql
-                        )
-        ) {
-
-            /*
-             * Read operation
-             */
-            readStmt.setString(
-                    1,
-                    rowKey
-            );
-
-            try (
-                    ResultSet result =
-                            readStmt.executeQuery()
-            ) {
-                // Execute and immediately close.
-            }
-
-            /*
-             * Write operation
-             */
-            writeStmt.setString(
-                    1,
-                    rowKey
-            );
-
-            return writeStmt.executeUpdate();
-        }
-    }
-
-    public void printPoolStatus() {
-
-        HikariPoolMXBean readBean =
-                readDataSource
-                        .getHikariPoolMXBean();
-
-        if (readBean != null) {
-
-            System.out.printf(
-                    "[Worker %d][%s] " +
-                    "Total: %d | " +
-                    "Active: %d | " +
-                    "Idle: %d | " +
-                    "Waiting: %d%n",
-
-                    workerNodeId,
-
-                    readDataSource.getPoolName(),
-
-                    readBean.getTotalConnections(),
-
-                    readBean.getActiveConnections(),
-
-                    readBean.getIdleConnections(),
-
-                    readBean
-                            .getThreadsAwaitingConnection()
-            );
-        }
-
-        HikariPoolMXBean writeBean =
-                writeDataSource
-                        .getHikariPoolMXBean();
-
-        if (writeBean != null) {
-
-            System.out.printf(
-                    "[Worker %d][%s] " +
-                    "Total: %d | " +
-                    "Active: %d | " +
-                    "Idle: %d | " +
-                    "Waiting: %d%n",
-
-                    workerNodeId,
-
-                    writeDataSource.getPoolName(),
-
-                    writeBean.getTotalConnections(),
-
-                    writeBean.getActiveConnections(),
-
-                    writeBean.getIdleConnections(),
-
-                    writeBean
-                            .getThreadsAwaitingConnection()
-            );
-        }
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public int getWorkerNodeId() {
-        return workerNodeId;
-    }
-
-    public void closeDataSource() {
-
-        if (
-                readDataSource != null &&
-                !readDataSource.isClosed()
-        ) {
-
-            readDataSource.close();
-        }
-
-        if (
-                writeDataSource != null &&
-                !writeDataSource.isClosed()
-        ) {
-
-            writeDataSource.close();
-        }
-    }
-}
