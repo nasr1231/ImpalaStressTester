@@ -1,49 +1,155 @@
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  02:16 min
-[INFO] Finished at: 2026-10-06T09:50:11+03:00
-[INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal on project ImpalaStressTesting: Could not resolve dependencies for project com.cib:ImpalaStressTesting:jar:1.0-SNAPSHOT
-[ERROR] dependency: org.slf4j:slf4j-api:jar:1.7.30 (compile)
-[ERROR]         Could not transfer artifact org.slf4j:slf4j-api:jar:1.7.30 from/to central (https://repo.maven.apache.org/maven2): sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
-[ERROR] dependency: jdk.tools:jdk.tools:jar:1.8 (system)
-[ERROR]         Could not find artifact jdk.tools:jdk.tools:jar:1.8 at specified path C:\Program Files\Java\jre1.8.0_471/../lib/tools.jar
-[ERROR]
-[ERROR] -> [Help 1]
-[ERROR]
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR]
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException
+Yes. For production, I’d stop hard-coding the UAT load balancer and make the target workers explicit so the same JAR can stress:
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set JAVA_HOME=C:\Users\MOBA42876\.jdks\ms-11.0.32
+cdp-p-wrkr1.hodomain.local
+cdp-p-wrkr2.hodomain.local
+cdp-p-wrkr3.hodomain.local
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set PATH=%JAVA_HOME%\bin;%PATH%
+A clean approach is to keep workerNodeId and build the hostname from it:
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set MAVEN_OPTS=-Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT-LOCALMACHINE
+String host = "cdp-p-wrkr" + workerNodeId + ".hodomain.local";
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set MAVEN_OPTS=-Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT
+Then your JDBC URL becomes:
 
-D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>mvn clean package
-[INFO] Scanning for projects...
-[INFO]
-[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
-[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
-[INFO]   from pom.xml
-[INFO] --------------------------------[ jar ]---------------------------------
-[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
-[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
-[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
-[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+String jdbcUrl =
+        "jdbc:impala://" + host + ":21050/DEV_CNSMR_LO" +
+        ";AuthMech=1" +
+        ";KrbAuthType=2" +
+        ";KrbRealm=HODOMAIN.LOCAL" +
+        ";KrbHostFQDN=" + host +
+        ";KrbServiceName=impala" +
+        ";SSL=1" +
+        ";SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks" +
+        ";SSLTrustStorePwd=CDPEIMPASS" +
+        ";UseNativeQuery=1;";
 
-Downloading from dynamodb-local-oregon: https://s3-us-west-2.amazonaws.com/dynamodb-local/release/net/minidev/json-smart/maven-metadata.xml
-Downloading from apache.snapshots: https://repository.apache.org/snapshots/net/minidev/json-smart/maven-metadata.xml
-Downloading from apache.snapshots.https: https://repository.apache.org/content/repositories/snapshots/net/minidev/json-smart/maven-metadata.xml
-Downloading from repository.jboss.org: https://repository.jboss.org/nexus/content/groups/public/net/minidev/json-smart/maven-metadata.xml
+So:
+
+new ImpalaService(1)
+
+targets:
+
+cdp-p-wrkr1.hodomain.local
+
+and:
+
+new ImpalaService(2)
+
+targets:
+
+cdp-p-wrkr2.hodomain.local
+
+and:
+
+new ImpalaService(3)
+
+targets:
+
+cdp-p-wrkr3.hodomain.local
+
+I’d change your constructor to this:
+
+public ImpalaService(int workerNodeId) {
+
+    if (workerNodeId < 1 || workerNodeId > 3) {
+        throw new IllegalArgumentException(
+                "workerNodeId must be 1, 2, or 3"
+        );
+    }
+
+    String host =
+            "cdp-p-wrkr" + workerNodeId + ".hodomain.local";
+
+    String jdbcUrl =
+            "jdbc:impala://" + host + ":21050/DEV_CNSMR_LO" +
+            ";AuthMech=1" +
+            ";KrbAuthType=2" +
+            ";KrbRealm=HODOMAIN.LOCAL" +
+            ";KrbHostFQDN=" + host +
+            ";KrbServiceName=impala" +
+            ";SSL=1" +
+            ";SSLTrustStore=/home/rise37432/ImpalaStressTest/securityConfigs/cm-auto-global_truststore.jks" +
+            ";SSLTrustStorePwd=CDPEIMPASS" +
+            ";UseNativeQuery=1;";
+
+    System.out.println("========================================");
+    System.out.println("PRODUCTION IMPALA STRESS TEST");
+    System.out.println("Worker       = " + workerNodeId);
+    System.out.println("Impala host  = " + host);
+    System.out.println("JDBC URL     = " + jdbcUrl);
+    System.out.println("========================================");
+
+    HikariConfig readConfig =
+            createBaseConfig(jdbcUrl);
+
+    readConfig.setPoolName(
+            "HikariPool-Read-wrkr" + workerNodeId
+    );
+
+    readConfig.setMaximumPoolSize(50);
+    readConfig.setConnectionTimeout(10000);
+
+    this.readDataSource =
+            new HikariDataSource(readConfig);
+
+    HikariConfig writeConfig =
+            createBaseConfig(jdbcUrl);
+
+    writeConfig.setPoolName(
+            "HikariPool-Write-wrkr" + workerNodeId
+    );
+
+    writeConfig.setMaximumPoolSize(14);
+    writeConfig.setConnectionTimeout(10000);
+
+    this.writeDataSource =
+            new HikariDataSource(writeConfig);
+}
+
+Because you're using:
+
+KrbAuthType=2
+
+remember to prepare the production Kerberos ticket before starting the JAR:
+
+export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
+export KRB5CCNAME=FILE:/tmp/krb5cc_$(id -u)
+
+kinit -kt \
+/home/rise37432/ImpalaStressTest/securityConfigs/rise37432.keytab \
+rise37432@HODOMAIN.LOCAL
+
+klist
+
+Then verify each production worker before stressing it:
+
+nc -vz cdp-p-wrkr1.hodomain.local 21050
+nc -vz cdp-p-wrkr2.hodomain.local 21050
+nc -vz cdp-p-wrkr3.hodomain.local 21050
+
+I would also obtain the service tickets once to verify Kerberos:
+
+kvno impala/cdp-p-wrkr1.hodomain.local@HODOMAIN.LOCAL
+kvno impala/cdp-p-wrkr2.hodomain.local@HODOMAIN.LOCAL
+kvno impala/cdp-p-wrkr3.hodomain.local@HODOMAIN.LOCAL
+
+For production, I strongly recommend starting with a deliberately low stress level—e.g. 5–10 concurrent queries, then 20, 30, etc.—while watching the Impala metrics. Don't immediately reuse a UAT setting such as 50 read + 14 write connections against production.
+
+Also, for the Prometheus pilot we planned, these same three hosts become your production scrape targets:
+
+static_configs:
+  - targets:
+      - "cdp-p-wrkr1.hodomain.local:25000"
+    labels:
+      worker: "wrkr1"
+
+  - targets:
+      - "cdp-p-wrkr2.hodomain.local:25000"
+    labels:
+      worker: "wrkr2"
+
+  - targets:
+      - "cdp-p-wrkr3.hodomain.local:25000"
+    labels:
+      worker: "wrkr3"
+
+One architectural choice matters: if the goal is to test production load-balancer distribution, you should keep JDBC pointed at the production LB and monitor these three workers. If the goal is to benchmark each worker individually, direct JDBC to wrkr1, wrkr2, and wrkr3 as above. Those are two different tests.
