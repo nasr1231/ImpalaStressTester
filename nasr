@@ -143,3 +143,7 @@ public int executeInsert(String rowKey) throws SQLException {
 }
 
 For your stress tester, this is a better workload pattern than random relational-style scans: high-volume point reads by row_key plus repeated inserts using generated HBase row keys.
+
+
+ParseException: Syntax error in line 8:undefined: STORED BY 'org.apache.hadoop.hive.hbas... ^ Encountered: STRING LITERAL Expected: ICEBERG, KUDU CAUSED BY: Exception: Syntax error
+
