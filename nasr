@@ -1,163 +1,49 @@
-Correct — for HBase, you want an HBase table + an Impala/Hive external table mapping to it, not a Kudu table.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:16 min
+[INFO] Finished at: 2026-10-06T09:50:11+03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal on project ImpalaStressTesting: Could not resolve dependencies for project com.cib:ImpalaStressTesting:jar:1.0-SNAPSHOT
+[ERROR] dependency: org.slf4j:slf4j-api:jar:1.7.30 (compile)
+[ERROR]         Could not transfer artifact org.slf4j:slf4j-api:jar:1.7.30 from/to central (https://repo.maven.apache.org/maven2): sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+[ERROR] dependency: jdk.tools:jdk.tools:jar:1.8 (system)
+[ERROR]         Could not find artifact jdk.tools:jdk.tools:jar:1.8 at specified path C:\Program Files\Java\jre1.8.0_471/../lib/tools.jar
+[ERROR]
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException
 
-For stress testing, keep the row key as STRING; Cloudera explicitly recommends string row keys for fast HBase point lookups through Impala. 
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set JAVA_HOME=C:\Users\MOBA42876\.jdks\ms-11.0.32
 
-First create the physical HBase table from the HBase shell:
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set PATH=%JAVA_HOME%\bin;%PATH%
 
-hbase shell
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set MAVEN_OPTS=-Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT-LOCALMACHINE
 
-create 'DEV_CNSMR_LO:IMPALA_STRESS_TEST', 'cf'
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>set MAVEN_OPTS=-Djavax.net.ssl.trustStore=NONE -Djavax.net.ssl.trustStoreType=Windows-ROOT
 
-You can verify it:
+D:\ImpalaStressTester\StressTester\ImpalaStressTester_wrkr2>mvn clean package
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.cib:ImpalaStressTesting >---------------------
+[INFO] Building ImpalaStressTesting 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for com.cloudera.impala.jdbc:ImpalaJDBC41:jar:2.6.4.1005 is invalid, transitive dependencies (if any) will not be available: 3 problems were encountered while building the effective model for Impala:ImpalaJDBC${env.JDBC_V}:${env.MAJOR_V}.${env.MINOR_V}.${env.REVISION_V}.${env.BUILD_V}
+[ERROR] 'artifactId' with value 'ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.artifactId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
+[ERROR] 'dependencies.dependency.groupId' for sb_ImpalaJDBC${env.JDBC_V}:sb_ImpalaJDBC${env.JDBC_V}:jar with value 'sb_ImpalaJDBC${env.JDBC_V}' does not match a valid id pattern. @
 
-describe 'DEV_CNSMR_LO:IMPALA_STRESS_TEST'
-
-Then create the Impala/Hive mapping table:
-
-CREATE EXTERNAL TABLE dev_cnsmr_lo.impala_stress_test (
-    row_key STRING,
-    shortname STRING,
-    country STRING,
-    postcode STRING,
-    test_value BIGINT
-)
-STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
-WITH SERDEPROPERTIES (
-    "hbase.columns.mapping" =
-    ":key,cf:shortname,cf:country,cf:postcode,cf:test_value"
-)
-TBLPROPERTIES (
-    "hbase.table.name" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST"
-);
-
-The mapping is positional: row_key maps to :key, then the remaining Impala columns map to their HBase family/qualifier pairs in the same order. 
-
-If you create the mapping through Hive, run this afterward in Impala:
-
-INVALIDATE METADATA dev_cnsmr_lo.impala_stress_test;
-
-Then insert test rows through Impala:
-
-INSERT INTO dev_cnsmr_lo.impala_stress_test
-VALUES (
-    'TEST_000001',
-    'Stress Customer 1',
-    'EG',
-    '11511',
-    1
-);
-
-Multiple rows:
-
-INSERT INTO dev_cnsmr_lo.impala_stress_test
-VALUES
-    ('TEST_000002', 'Stress Customer 2', 'EG', '11512', 2),
-    ('TEST_000003', 'Stress Customer 3', 'EG', '11513', 3),
-    ('TEST_000004', 'Stress Customer 4', 'EG', '11514', 4);
-
-Impala supports INSERT ... VALUES and INSERT ... SELECT against HBase-backed tables. If you insert the same HBase row key again, the later values become the visible version for that key, which makes this useful for repeatedly updating stress-test rows. INSERT OVERWRITE is not supported for HBase tables. 
-
-For your main stress read, use a row-key point lookup:
-
-SELECT
-    shortname,
-    country,
-    postcode,
-    test_value
-FROM dev_cnsmr_lo.impala_stress_test
-WHERE row_key = 'TEST_000001';
-
-That is the type of HBase query Impala is best suited for. 
-
-A slightly heavier scan:
-
-SELECT
-    row_key,
-    shortname,
-    country,
-    postcode,
-    test_value
-FROM dev_cnsmr_lo.impala_stress_test
-WHERE row_key >= 'TEST_000001'
-  AND row_key <= 'TEST_001000';
-
-And a heavier query for stressing Impala rather than only HBase point reads:
-
-SELECT
-    country,
-    COUNT(*) AS total_rows,
-    MAX(test_value) AS max_test_value
-FROM dev_cnsmr_lo.impala_stress_test
-GROUP BY country;
-
-For your Java code, I would change the read to:
-
-public int executeQuery(String rowKey) throws SQLException {
-
-    int rowCount = 0;
-
-    String sql =
-            "SELECT shortname, country, postcode, test_value " +
-            "FROM dev_cnsmr_lo.impala_stress_test " +
-            "WHERE row_key = ?";
-
-    try (
-            Connection conn = readDataSource.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)
-    ) {
-
-        stmt.setString(1, rowKey);
-
-        try (ResultSet res = stmt.executeQuery()) {
-            while (res.next()) {
-                rowCount++;
-            }
-        }
-    }
-
-    return rowCount;
-}
-
-And the write to:
-
-public int executeInsert(String rowKey) throws SQLException {
-
-    String sql =
-            "INSERT INTO dev_cnsmr_lo.impala_stress_test " +
-            "(row_key, shortname, country, postcode, test_value) " +
-            "VALUES (?, ?, ?, ?, ?)";
-
-    try (
-            Connection conn = writeDataSource.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)
-    ) {
-
-        stmt.setString(1, rowKey);
-        stmt.setString(2, "Stress_" + rowKey);
-        stmt.setString(3, "EG");
-        stmt.setString(4, "11511");
-        stmt.setLong(5, System.currentTimeMillis());
-
-        return stmt.executeUpdate();
-    }
-}
-
-For your stress tester, this is a better workload pattern than random relational-style scans: high-volume point reads by row_key plus repeated inserts using generated HBase row keys.
-
-
-CREATE EXTERNAL TABLE dev_cnsmr_lo.impala_stress_test (
-    row_key STRING,
-    shortname STRING,
-    country STRING,
-    postcode STRING,
-    test_value BIGINT
-)
-STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
-WITH SERDEPROPERTIES (
-    "hbase.columns.mapping" =
-    ":key,cf:shortname,cf:country,cf:postcode,cf:test_value"
-)
-TBLPROPERTIES (
-    "hbase.table.name" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST",
-    "hbase.mapred.output.outputtable" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST"
-);
+Downloading from dynamodb-local-oregon: https://s3-us-west-2.amazonaws.com/dynamodb-local/release/net/minidev/json-smart/maven-metadata.xml
+Downloading from apache.snapshots: https://repository.apache.org/snapshots/net/minidev/json-smart/maven-metadata.xml
+Downloading from apache.snapshots.https: https://repository.apache.org/content/repositories/snapshots/net/minidev/json-smart/maven-metadata.xml
+Downloading from repository.jboss.org: https://repository.jboss.org/nexus/content/groups/public/net/minidev/json-smart/maven-metadata.xml
