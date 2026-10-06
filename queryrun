@@ -1,0 +1,62 @@
+package com.cib.impalaStressTester;
+
+import java.sql.SQLException;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class QueryRun implements Runnable {
+    private final boolean isReadOp;
+    private final ImpalaService[] service;
+    private final int targetNode;
+    private final IterationMetrics batchInfo;
+
+    public QueryRun(boolean isReadOp, ImpalaService[] service, int targetNode, IterationMetrics batchInfo) {
+        this.isReadOp = isReadOp;
+        this.service = service;
+        this.targetNode = targetNode;
+        this.batchInfo = batchInfo;
+    }
+
+    @Override
+    public void run() {
+        if (!MetricsTracker.slaBreachedOccur.get()) {
+            long start = System.currentTimeMillis();
+            long randomId = ThreadLocalRandom.current().nextLong(1000000000L, 1006000001L);
+            String idStr = String.valueOf(randomId);
+            String rowKey = idStr.substring(idStr.length() - 1) + idStr;
+
+            int affectedRows = 0;
+            boolean success = true;
+            batchInfo.incrementWorker(this.targetNode);
+
+            try {
+                batchInfo.getTracker().beforeExecution();
+
+                if (isReadOp) {
+
+                    affectedRows = service[0].executeQuery(rowKey); // Hits read pool
+                } else {
+
+                    affectedRows = service[0].executeInsert(rowKey); // Hits write pool
+                }
+            } catch (SQLException e) {
+                success = false;
+                String msg = e.getMessage();
+                if (msg != null && msg.contains("sleep interrupted")) {
+                    System.out.println("Query cancelled gracefully after SLA breach.");
+                } else if (msg != null && msg.contains("Connection is not available")) {
+                    System.err.println("Pool Exhausted! Pool type: " + (isReadOp ? "READ" : "WRITE"));
+                } else {
+                    System.err.println("Database error: " + msg);
+                }
+            } catch (Exception e) {
+                success = false;
+                System.err.println("Unexpected error: " + e.getMessage());
+            } finally {
+                batchInfo.getTracker().afterExecution(start, success, affectedRows, isReadOp);
+            }
+        } else {
+            System.out.println("Execution Stopped SLA Breached");
+        }
+    }
+}
+
