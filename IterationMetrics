@@ -1,0 +1,40 @@
+package com.cib.impalaStressTester;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.cib.impalaStressTester.Constants.SLA_P99_THRESHOLD_MS;
+
+public class IterationMetrics {
+
+    private final AtomicInteger[] workerCounts = {new AtomicInteger(0), new AtomicInteger(0), new AtomicInteger(0)};
+    private final MetricsTracker tracker = new MetricsTracker();
+    private final int roundNum;
+    private final int batchNo;
+
+    public IterationMetrics(int roundNum, int batchNo) {
+        this.roundNum = roundNum;
+        this.batchNo = batchNo;
+    }
+
+
+    public void incrementWorker(int targetNode) {
+        workerCounts[targetNode].incrementAndGet();
+    }
+
+    public MetricsTracker getTracker() {
+        return tracker;
+    }
+
+    public void print() {
+        double p95 = tracker.getP95();
+        double p99 = tracker.getP99();
+        double p100 = tracker.getP100();
+
+        System.out.printf("Round-Batch %d-%d Step Complete | P100: %.2fms | Read Rows: %.2f | Updated Write  Rows: %.2f%n",
+                roundNum, batchNo, p100, tracker.getReadRowCount(), tracker.getWriteRowCount());
+
+        if (p99 > SLA_P99_THRESHOLD_MS) {
+            System.err.println("!!! SLA BREACHED !!!");
+        }
+    }
+}
