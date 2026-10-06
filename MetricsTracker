@@ -1,0 +1,140 @@
+package com.cib.impalaStressTester;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
+
+import static com.cib.impalaStressTester.Constants.*;
+
+public class MetricsTracker {
+    public static AtomicBoolean slaBreachedOccur=new AtomicBoolean();
+    private final LongAdder totalRequests = new LongAdder();
+    private final LongAdder failedRequests = new LongAdder();
+    private AtomicInteger breachedRowCount = new AtomicInteger(0);
+    // Concurrent usage tracking
+    private final AtomicInteger currentConcurrent = new AtomicInteger(0);
+    private int maxConcurrent = 0;
+
+    // Execution time tracking (Thread-safe list)
+    private final AtomicInteger readRowCount = new AtomicInteger(0);
+    private final AtomicInteger writeRowCount = new AtomicInteger(0);
+    private final List<Long> latencies = Collections.synchronizedList(new ArrayList<>());
+
+    public void beforeIteration() {
+
+        readRowCount.set(0);
+        writeRowCount.set(0);
+        latencies.clear();
+
+    }
+
+    //Call this at the very start of a thread execution
+    public void beforeExecution() {
+        totalRequests.increment();
+        int current = currentConcurrent.incrementAndGet();
+
+        // Sync block only for updating the global high-water mark
+        synchronized (this) {
+            if (current > maxConcurrent) {
+                maxConcurrent = current;
+            }
+        }
+    }
+
+    //Call this after a query finishes.
+    public void afterExecution(long startTime, boolean success, int rows, boolean isRead) {
+        long duration = System.currentTimeMillis() - startTime;
+        if (isRead && duration >= SLA_P99_THRESHOLD_MS) {
+            System.out.println("SLA reached, duration:"+duration);
+            breachedRowCount.incrementAndGet();
+            slaBreachedOccur.set(true);
+        }
+        currentConcurrent.decrementAndGet();
+
+        if (!success) {
+            failedRequests.increment();
+        }
+        if (isRead) {
+            readRowCount.addAndGet(rows);
+            latencies.add(duration);
+        } else {
+            writeRowCount.addAndGet(rows);
+        }
+
+    }
+
+    public boolean isBreached() {
+        return breachedRowCount.get() > 0;
+    }
+
+    public void report() {
+        List<Long> sortedLatencies;
+        synchronized (latencies) {
+            sortedLatencies = new ArrayList<>(latencies);
+        }
+        Collections.sort(sortedLatencies);
+
+        if (sortedLatencies.isEmpty()) {
+            System.out.println("No metrics recorded.");
+            return;
+        }
+
+        long maxTime = sortedLatencies.get(sortedLatencies.size() - 1);
+        double p95 = getPercentile(sortedLatencies, 95);
+        double p99 = getPercentile(sortedLatencies, 99);
+
+        System.out.println("\n--- STRESS TEST REPORT ---");
+        System.out.println("Total Requests: " + totalRequests.sum());
+        System.out.println("Failed Requests: " + failedRequests.sum());
+        System.out.println("Max Concurrent Queries: " + maxConcurrent);
+        System.out.println("Max Execution Time: " + maxTime + "ms");
+        System.out.printf("P95 Latency: %.2fms%n", p95);
+        System.out.printf("P99 Latency: %.2fms%n", p99);
+        System.out.println("---------------------------\n");
+    }
+
+    public double getReadRowCount() {
+        return readRowCount.get();
+    }
+
+    public double getWriteRowCount() {
+        return writeRowCount.get();
+    }
+
+    public double getP95() {
+        List<Long> sortedLatencies;
+        synchronized (latencies) {
+            sortedLatencies = new ArrayList<>(latencies);
+        }
+        Collections.sort(sortedLatencies);
+        return getPercentile(sortedLatencies, 95);
+    }
+
+    public double getP99() {
+        List<Long> sortedLatencies;
+        synchronized (latencies) {
+            sortedLatencies = new ArrayList<>(latencies);
+        }
+        Collections.sort(sortedLatencies);
+        return getPercentile(sortedLatencies, 99);
+    }
+
+    public double getP100() {
+        List<Long> sortedLatencies;
+        synchronized (latencies) {
+            sortedLatencies = new ArrayList<>(latencies);
+        }
+        Collections.sort(sortedLatencies);
+        return getPercentile(sortedLatencies, 100);
+    }
+
+
+    private double getPercentile(List<Long> sortedList, double percentile) {
+        if (sortedList.isEmpty()) return Double.NaN;
+        int index = (int) Math.ceil(percentile / 100.0 * sortedList.size()) - 1;
+        return sortedList.get(Math.max(0, index));
+    }
+}
