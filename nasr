@@ -1,164 +1,84 @@
-package com.cib.impalaStressTester;
+This time the 9-field mapping is working. The error has moved to only one thing: the content of field 9 is not reaching the XML parser as <...>.
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+column 0 is the key clue. It means the first character of XMLRECORD itself is invalid XML — usually a leftover ", \, BOM/NUL, or another wrapper.
 
-import static com.cib.impalaStressTester.Constants.*;
+So I don't want to guess another format. Run this exact command against the failing row; it uses the same split(";", 8) rule as our producer and shows exactly what field 9 contains:
 
-public class ImpalaStressTester {
+python3 - <<'PY'
+path = "/data/T24/0510/ACFBNK_ACCOUNT/T24_ACFBNK_ACCOUNT_20261005020246962.txt"
+line_no = 138
 
+with open(path, "r", encoding="utf-8", errors="replace") as f:
+    for n, line in enumerate(f, 1):
+        if n == line_no:
+            line = line.rstrip("\r\n")
+            parts = line.split(";", 8)
 
-    public static final int END_ROUND_NUMBER = 11;
-    public static final int BATCH_PR_MIN = 61;
-    public static final int START_ROUND_NUM = 7;
+            print("FIELD COUNT:", len(parts))
 
-    public static void main(String[] args) throws InterruptedException {
+            for i, v in enumerate(parts[:8], 1):
+                print("%d:" % i, repr(v))
 
-        // Split Thread Pools
+            if len(parts) == 9:
+                xml = parts[8]
+                print("\nFIELD 9 RAW LENGTH:", len(xml))
+                print("FIELD 9 FIRST 300 CHARS:")
+                print(repr(xml[:300]))
+                print("\nFIRST 30 CODEPOINTS:")
+                print([(c, ord(c)) for c in xml[:30]])
+            break
+PY
 
+I specifically need the output of:
 
-        long testStartTime = System.currentTimeMillis();
-        boolean breached = false;
+FIELD 9 FIRST 300 CHARS:
+...
 
-        ImpalaService[] service = {
-                //new ImpalaService(1),
-                new ImpalaService(2)
-                //new ImpalaService(3)
-        };
+The current error already proves that these are now parsed correctly:
 
-        System.out.println("Starting   Stress Test...");
+op_ts
+optype
+csn
+capture_ts
+xid
+opseqno
+pos
+RECID
 
+So do not change the 9-field layout again.
 
-        // Cleanup hooks
-        for (ImpalaService impalaService : service) {
-            Runtime.getRuntime().addShutdownHook(new Thread(impalaService::closeDataSource));
-        }
-        round(testStartTime, service, START_ROUND_NUM);
-    }
+Most likely, we'll find something like one of these:
 
-    private static void round(long testStartTime, ImpalaService[] service, int roundNum) throws InterruptedException {
-        int readQPS = roundNum * 10;
-        System.out.printf("Round %d Started : Read QPS %d%n", roundNum, readQPS);
-        ExecutorService readExecutor = Executors.newFixedThreadPool(READ_THREADS);
-        ExecutorService writeExecutor = Executors.newFixedThreadPool(WRITE_THREADS);
-        ScheduledExecutorService batchOrchestrator = Executors.newSingleThreadScheduledExecutor();
-        AtomicReference<ScheduledFuture<?>> futureHolder = new AtomicReference<>();
-        AtomicInteger batchCounter = new AtomicInteger(0);
-        ScheduledFuture<?> scheduledFuture = batchOrchestrator.scheduleWithFixedDelay(() -> {
-            int i = batchCounter.incrementAndGet();
-            if (i < BATCH_PR_MIN) {
-                System.out.printf("Round %d Batch %d Started %3$tT%n ", roundNum, i, LocalDateTime.now());
-                List<Future> all = new ArrayList<>();
-                IterationMetrics batchInfo = new IterationMetrics(roundNum, i);
-                all.addAll(submitReadBatch(readExecutor, service, batchInfo, readQPS));
-                submitWriteBatch(writeExecutor, service, batchInfo);
-                iterationEnd(all, batchInfo);
-                if (batchInfo.getTracker().isBreached()) {
-                    System.out.println("Shut Down Started");
-                    shutDown(readExecutor, writeExecutor, futureHolder.get());
-                    closeAllServices(service);
-                }
-            } else {
-                System.out.println("Shut Down Started");
-                shutDown(readExecutor, writeExecutor, futureHolder.get());
-                rerun(service, roundNum);
-            }
-        }, 1, 1, TimeUnit.SECONDS);
-        futureHolder.set(scheduledFuture);
+'"<row ...'
 
+or:
 
-    }
+'\\"<row ...'
 
-    private static void rerun(ImpalaService[] service, int roundNum) {
+or:
 
-        sleepTillMinStart();
+'\ufeff<row ...'
 
-        int newRound = roundNum + 1;
-        if (newRound <= END_ROUND_NUMBER) {
-            try {
+or:
 
-                round(System.currentTimeMillis(), service, newRound);
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Failed at round" + newRound, e);
-            }
-        } else {
-            closeAllServices(service);
-        }
-    }
+'\x00<row ...'
 
-    private static void sleepTillMinStart() {
-        long currentMillis = System.currentTimeMillis();
-        long millisInCurrentMinute = currentMillis % 60000;
-        long sleepTime = 60000 - millisInCurrentMinute;
+or possibly:
 
-        // Block the thread until second 0
-        try {
-            Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
+'"<?xml version=""1.0"" ...'
 
-    private static void closeAllServices(ImpalaService[] service) {
-        for (ImpalaService srvc : service) {
-            System.out.println("Close DataSource");
-            srvc.closeDataSource();
-        }
-    }
+Each needs a slightly different normalization rule. Once you paste that repr(xml[:300]), I can fix the XML normalization exactly instead of introducing another assumption.
 
-    private static void shutDown(ExecutorService readExecutor, ExecutorService writeExecutor, ScheduledFuture<?> scheduledFuture) {
-        scheduledFuture.cancel(false); // false lets the current run finish; true interrupts it
-        readExecutor.shutdownNow();
-        writeExecutor.shutdownNow();
-        try {
-            readExecutor.awaitTermination(1, TimeUnit.MINUTES);
-            writeExecutor.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+Also run this for comparison on a row that passes validation, if you have one:
 
-    private static void iterationEnd(List<Future> all, IterationMetrics rBatchInfo) {
-        for (Future f : all) {
-            try {
-                f.get();
-            } catch (Exception e) {
-                new RuntimeException(e);
-            }
-        }
-        rBatchInfo.print();
-    }
+python3 - <<'PY'
+path = "/data/T24/0510/ACFBNK_ACCOUNT/T24_ACFBNK_ACCOUNT_20261005020246962.txt"
 
-    private static List<Future> submitReadBatch(ExecutorService readExecutor,
-                                                ImpalaService[] service,
-                                                IterationMetrics batchInfo,
-                                                int concurrentQueries) {
+with open(path, "r", encoding="utf-8", errors="replace") as f:
+    for n, line in enumerate(f, 1):
+        if n in (137, 138, 139):
+            p = line.rstrip("\r\n").split(";", 8)
+            print(n, "fields=", len(p), "XML=", repr(p[8][:150]) if len(p) == 9 else "NO FIELD 9")
+PY
 
-
-        List<Future> readFutureList = new ArrayList<>();
-        for (int i = 0; i < concurrentQueries; i++) {
-
-            final int iteration = i;
-
-            readFutureList.add(readExecutor.submit(() -> new QueryRun(true, service,
-                    iteration % 3, batchInfo).run()));
-        }
-        return readFutureList;
-    }
-
-    private static List<Future> submitWriteBatch(ExecutorService writeExecutor, ImpalaService[] service,
-                                                 IterationMetrics batchInfo) {
-        List<Future> writeFutureList = new ArrayList<>();
-        for (int i = 0; i < WRITE_QPS; i++) {
-            final int iteration = i;
-            writeFutureList.add(writeExecutor.submit(() -> new QueryRun(false, service,
-                    iteration % 3, batchInfo).run()));
-
-        }
-        return writeFutureList;
-    }
-}
+Send me those three outputs. That will tell us whether line 138 has a special escape/wrapper or whether all production XML uses a representation our normalizer needs to handle.
