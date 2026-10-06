@@ -1,67 +1,145 @@
-Worked for 28s
+Correct — for HBase, you want an HBase table + an Impala/Hive external table mapping to it, not a Kudu table.
 
-Now the Java side is finally using the correct mode:
+For stress testing, keep the row key as STRING; Cloudera explicitly recommends string row keys for fast HBase point lookups through Impala. 
 
-KrbAuthType=2
+First create the physical HBase table from the HBase shell:
 
-and the previous JAAS/KDC timeout is gone. The remaining GSS initiate failed is now in the ticket-cache/service-principal stage. Cloudera documents that KrbAuthType=2 uses the Kerberos ticket cache via KRB5_CONFIG and KRB5CCNAME. 
+hbase shell
 
-The first thing I would fix is that in your last command you ran only:
+create 'DEV_CNSMR_LO:IMPALA_STRESS_TEST', 'cf'
 
-java -jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+You can verify it:
 
-but your earlier KRB5_CONFIG=... was scoped only to the kinit command. Export both variables before Java:
+describe 'DEV_CNSMR_LO:IMPALA_STRESS_TEST'
 
-export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
-export KRB5CCNAME=FILE:/tmp/krb5cc_206621
+Then create the Impala/Hive mapping table:
 
-echo $KRB5_CONFIG
-echo $KRB5CCNAME
+CREATE EXTERNAL TABLE dev_cnsmr_lo.impala_stress_test (
+    row_key STRING,
+    shortname STRING,
+    country STRING,
+    postcode STRING,
+    test_value BIGINT
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+    "hbase.columns.mapping" =
+    ":key,cf:shortname,cf:country,cf:postcode,cf:test_value"
+)
+TBLPROPERTIES (
+    "hbase.table.name" = "DEV_CNSMR_LO:IMPALA_STRESS_TEST"
+);
 
-klist
+The mapping is positional: row_key maps to :key, then the remaining Impala columns map to their HBase family/qualifier pairs in the same order. 
 
-Then request the exact service ticket Java needs for the LB:
+If you create the mapping through Hive, run this afterward in Impala:
 
-kvno impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+INVALIDATE METADATA dev_cnsmr_lo.impala_stress_test;
 
-Then check:
+Then insert test rows through Impala:
 
-klist
+INSERT INTO dev_cnsmr_lo.impala_stress_test
+VALUES (
+    'TEST_000001',
+    'Stress Customer 1',
+    'EG',
+    '11511',
+    1
+);
 
-You want to see both:
+Multiple rows:
 
-krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL
+INSERT INTO dev_cnsmr_lo.impala_stress_test
+VALUES
+    ('TEST_000002', 'Stress Customer 2', 'EG', '11512', 2),
+    ('TEST_000003', 'Stress Customer 3', 'EG', '11513', 3),
+    ('TEST_000004', 'Stress Customer 4', 'EG', '11514', 4);
 
-and:
+Impala supports INSERT ... VALUES and INSERT ... SELECT against HBase-backed tables. If you insert the same HBase row key again, the later values become the visible version for that key, which makes this useful for repeatedly updating stress-test rows. INSERT OVERWRITE is not supported for HBase tables. 
 
-impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+For your main stress read, use a row-key point lookup:
 
-Then run:
+SELECT
+    shortname,
+    country,
+    postcode,
+    test_value
+FROM dev_cnsmr_lo.impala_stress_test
+WHERE row_key = 'TEST_000001';
 
-java \
--Djava.security.krb5.conf="$KRB5_CONFIG" \
--Dsun.security.krb5.debug=true \
--jar ImpalaStressTesting-1.0-SNAPSHOT-jar-all.jar
+That is the type of HBase query Impala is best suited for. 
 
-The kvno result is the key discriminator:
+A slightly heavier scan:
 
-- If kvno says something like Server not found in Kerberos database, then the LB SPN is missing. The required SPN is:
-  impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
-- If kvno succeeds but Java still gives GSS initiate failed, then the likely problem is on the Impala side: the backend impalad keytabs do not contain the LB principal. Cloudera says the Impala Daemons Load Balancer setting should be configured as LB_HOST:PORT; with Kerberos enabled, Cloudera Manager adds impala/LB_HOST@REALM to all Impala daemon keytabs, followed by an Impala restart. 
+SELECT
+    row_key,
+    shortname,
+    country,
+    postcode,
+    test_value
+FROM dev_cnsmr_lo.impala_stress_test
+WHERE row_key >= 'TEST_000001'
+  AND row_key <= 'TEST_001000';
 
-For your environment that setting should correspond to:
+And a heavier query for stressing Impala rather than only HBase point reads:
 
-master-vm-cdp01-uat-app-387066.hodomain.local:21050
+SELECT
+    country,
+    COUNT(*) AS total_rows,
+    MAX(test_value) AS max_test_value
+FROM dev_cnsmr_lo.impala_stress_test
+GROUP BY country;
 
-So run these exact commands next:
+For your Java code, I would change the read to:
 
-export KRB5_CONFIG=/home/rise37432/ImpalaStressTest/securityConfigs/kerb5.ini
-export KRB5CCNAME=FILE:/tmp/krb5cc_206621
+public int executeQuery(String rowKey) throws SQLException {
 
-klist
+    int rowCount = 0;
 
-kvno impala/master-vm-cdp01-uat-app-387066.hodomain.local@TESTHODOMAIN.LOCAL
+    String sql =
+            "SELECT shortname, country, postcode, test_value " +
+            "FROM dev_cnsmr_lo.impala_stress_test " +
+            "WHERE row_key = ?";
 
-klist
+    try (
+            Connection conn = readDataSource.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)
+    ) {
 
-The output of kvno will tell us whether this is still client-side or definitively an LB/Impala SPN configuration issue.
+        stmt.setString(1, rowKey);
+
+        try (ResultSet res = stmt.executeQuery()) {
+            while (res.next()) {
+                rowCount++;
+            }
+        }
+    }
+
+    return rowCount;
+}
+
+And the write to:
+
+public int executeInsert(String rowKey) throws SQLException {
+
+    String sql =
+            "INSERT INTO dev_cnsmr_lo.impala_stress_test " +
+            "(row_key, shortname, country, postcode, test_value) " +
+            "VALUES (?, ?, ?, ?, ?)";
+
+    try (
+            Connection conn = writeDataSource.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)
+    ) {
+
+        stmt.setString(1, rowKey);
+        stmt.setString(2, "Stress_" + rowKey);
+        stmt.setString(3, "EG");
+        stmt.setString(4, "11511");
+        stmt.setLong(5, System.currentTimeMillis());
+
+        return stmt.executeUpdate();
+    }
+}
+
+For your stress tester, this is a better workload pattern than random relational-style scans: high-volume point reads by row_key plus repeated inserts using generated HBase row keys.
