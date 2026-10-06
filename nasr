@@ -14,33 +14,67 @@ public class ImpalaService {
     private final HikariDataSource readDataSource;
     private final HikariDataSource writeDataSource;
 
-    private static final String HOST =
-            "master-vm-cdp01-uat-app-387066.hodomain.local";
+    private static final String DATABASE = "DEV_CNSMR_LO";
 
-    private static final String JDBC_URL =
-            "jdbc:impala://" + HOST + ":21050/DEV_CNSMR_LO" +
-            ";AuthMech=1" +
-            ";KrbAuthType=1" +
-            ";KrbRealm=HODOMAIN.LOCAL" +
-            ";KrbHostFQDN=" + HOST +
-            ";KrbServiceName=impala" +
-            ";KrbPrincipal=moba42876@HODOMAIN.LOCAL" +
-            ";KrbKeytabFile=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab" +
-            ";SSL=1" +
-            ";SSLTrustStore=C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks" +
-            ";SSLTrustStorePwd=CDPEIMPASS" +
-            ";UseNativeQuery=1;";
+    private static final String KRB_REALM =
+            "HODOMAIN.LOCAL";
+
+    private static final String KRB_PRINCIPAL =
+            "moba42876@HODOMAIN.LOCAL";
+
+    private static final String KRB5_CONFIG =
+            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini";
+
+    private static final String JAAS_CONFIG =
+            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf";
+
+    private static final String KEYTAB_FILE =
+            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876.keytab";
+
+    private static final String TRUSTSTORE_FILE =
+            "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/cm-auto-global_truststore.jks";
+
+    private static final String TRUSTSTORE_PASSWORD =
+            "CDPEIMPASS";
+
+    private final int workerNodeId;
+    private final String host;
+    private final String jdbcUrl;
 
     public ImpalaService(int workerNodeId) {
 
+        /*
+         * Production workers:
+         *
+         * 1 -> cdp-p-wrkr1.hodomain.local
+         * 2 -> cdp-p-wrkr2.hodomain.local
+         * 3 -> cdp-p-wrkr3.hodomain.local
+         */
+        if (workerNodeId < 1 || workerNodeId > 3) {
+            throw new IllegalArgumentException(
+                    "Invalid workerNodeId: " + workerNodeId +
+                    ". Allowed values are 1, 2, or 3."
+            );
+        }
+
+        this.workerNodeId = workerNodeId;
+
+        this.host =
+                "cdp-p-wrkr" +
+                workerNodeId +
+                ".hodomain.local";
+
+        /*
+         * JVM Kerberos configuration
+         */
         System.setProperty(
                 "java.security.krb5.conf",
-                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/kerb5.ini"
+                KRB5_CONFIG
         );
 
         System.setProperty(
                 "java.security.auth.login.config",
-                "C:/Users/MOBA42876/Documents/ImpalaStressTester_wrkr2/securityConfigs/moba42876_kafka_client_jaas.conf"
+                JAAS_CONFIG
         );
 
         System.setProperty(
@@ -48,28 +82,96 @@ public class ImpalaService {
                 "false"
         );
 
+        /*
+         * Production Impala JDBC URL
+         */
+        this.jdbcUrl =
+                "jdbc:impala://" +
+                host +
+                ":21050/" +
+                DATABASE +
+
+                ";AuthMech=1" +
+
+                // JAAS / keytab Kerberos authentication
+                ";KrbAuthType=1" +
+
+                ";KrbRealm=" +
+                KRB_REALM +
+
+                ";KrbHostFQDN=" +
+                host +
+
+                ";KrbServiceName=impala" +
+
+                ";KrbPrincipal=" +
+                KRB_PRINCIPAL +
+
+                ";KrbKeytabFile=" +
+                KEYTAB_FILE +
+
+                // TLS
+                ";SSL=1" +
+
+                ";SSLTrustStore=" +
+                TRUSTSTORE_FILE +
+
+                ";SSLTrustStorePwd=" +
+                TRUSTSTORE_PASSWORD +
+
+                ";UseNativeQuery=1;";
+
         System.out.println("========================================");
-        System.out.println("NEW IMPALA SERVICE LOADED");
-        System.out.println("JDBC URL = " + JDBC_URL);
+        System.out.println("PRODUCTION IMPALA STRESS TEST");
+        System.out.println("Worker ID : " + workerNodeId);
+        System.out.println("Host      : " + host);
+        System.out.println("Database  : " + DATABASE);
+        System.out.println("JDBC URL  : " + jdbcUrl);
         System.out.println("========================================");
 
-        HikariConfig readConfig = createBaseConfig();
+        /*
+         * READ connection pool
+         */
+        HikariConfig readConfig =
+                createBaseConfig();
 
-        readConfig.setPoolName("HikariPool-Read");
+        readConfig.setPoolName(
+                "HikariPool-Read-wrkr" +
+                workerNodeId
+        );
+
         readConfig.setMaximumPoolSize(50);
-        readConfig.setConnectionTimeout(10000);
+
+        readConfig.setConnectionTimeout(
+                10000
+        );
 
         this.readDataSource =
-                new HikariDataSource(readConfig);
+                new HikariDataSource(
+                        readConfig
+                );
 
-        HikariConfig writeConfig = createBaseConfig();
+        /*
+         * WRITE connection pool
+         */
+        HikariConfig writeConfig =
+                createBaseConfig();
 
-        writeConfig.setPoolName("HikariPool-Write");
+        writeConfig.setPoolName(
+                "HikariPool-Write-wrkr" +
+                workerNodeId
+        );
+
         writeConfig.setMaximumPoolSize(14);
-        writeConfig.setConnectionTimeout(10000);
+
+        writeConfig.setConnectionTimeout(
+                10000
+        );
 
         this.writeDataSource =
-                new HikariDataSource(writeConfig);
+                new HikariDataSource(
+                        writeConfig
+                );
     }
 
     private HikariConfig createBaseConfig() {
@@ -82,7 +184,7 @@ public class ImpalaService {
         );
 
         config.setJdbcUrl(
-                JDBC_URL
+                jdbcUrl
         );
 
         config.setConnectionTimeout(
@@ -100,39 +202,12 @@ public class ImpalaService {
         return config;
     }
 
-    public void printPoolStatus() {
-
-        HikariPoolMXBean readBean =
-                readDataSource.getHikariPoolMXBean();
-
-        if (readBean != null) {
-
-            System.out.printf(
-                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
-                    readDataSource.getPoolName(),
-                    readBean.getTotalConnections(),
-                    readBean.getActiveConnections(),
-                    readBean.getIdleConnections(),
-                    readBean.getThreadsAwaitingConnection()
-            );
-        }
-
-        HikariPoolMXBean writeBean =
-                writeDataSource.getHikariPoolMXBean();
-
-        if (writeBean != null) {
-
-            System.out.printf(
-                    "[%s] Total: %d | Active: %d | Idle: %d | Waiting: %d%n",
-                    writeDataSource.getPoolName(),
-                    writeBean.getTotalConnections(),
-                    writeBean.getActiveConnections(),
-                    writeBean.getIdleConnections(),
-                    writeBean.getThreadsAwaitingConnection()
-            );
-        }
-    }
-
+    /**
+     * Stress-test SELECT.
+     *
+     * Executes a point lookup against the production HBase-backed
+     * customer_keys table.
+     */
     public int executeQuery(String rowKey)
             throws SQLException {
 
@@ -151,7 +226,10 @@ public class ImpalaService {
                         conn.prepareStatement(sql)
         ) {
 
-            stmt.setString(1, rowKey);
+            stmt.setString(
+                    1,
+                    rowKey
+            );
 
             try (
                     ResultSet result =
@@ -167,6 +245,11 @@ public class ImpalaService {
         return rowCount;
     }
 
+    /**
+     * Stress-test WRITE.
+     *
+     * First performs a read and then inserts the test row.
+     */
     public int executeInsert(String rowKey)
             throws SQLException {
 
@@ -185,37 +268,124 @@ public class ImpalaService {
                         writeDataSource.getConnection();
 
                 PreparedStatement readStmt =
-                        conn.prepareStatement(readSql);
+                        conn.prepareStatement(
+                                readSql
+                        );
 
                 PreparedStatement writeStmt =
-                        conn.prepareStatement(writeSql)
+                        conn.prepareStatement(
+                                writeSql
+                        )
         ) {
 
-            readStmt.setString(1, rowKey);
+            /*
+             * Read operation
+             */
+            readStmt.setString(
+                    1,
+                    rowKey
+            );
 
             try (
                     ResultSet result =
                             readStmt.executeQuery()
             ) {
-                // execute read
+                // Execute and immediately close.
             }
 
-            writeStmt.setString(1, rowKey);
+            /*
+             * Write operation
+             */
+            writeStmt.setString(
+                    1,
+                    rowKey
+            );
 
             return writeStmt.executeUpdate();
         }
     }
 
+    public void printPoolStatus() {
+
+        HikariPoolMXBean readBean =
+                readDataSource
+                        .getHikariPoolMXBean();
+
+        if (readBean != null) {
+
+            System.out.printf(
+                    "[Worker %d][%s] " +
+                    "Total: %d | " +
+                    "Active: %d | " +
+                    "Idle: %d | " +
+                    "Waiting: %d%n",
+
+                    workerNodeId,
+
+                    readDataSource.getPoolName(),
+
+                    readBean.getTotalConnections(),
+
+                    readBean.getActiveConnections(),
+
+                    readBean.getIdleConnections(),
+
+                    readBean
+                            .getThreadsAwaitingConnection()
+            );
+        }
+
+        HikariPoolMXBean writeBean =
+                writeDataSource
+                        .getHikariPoolMXBean();
+
+        if (writeBean != null) {
+
+            System.out.printf(
+                    "[Worker %d][%s] " +
+                    "Total: %d | " +
+                    "Active: %d | " +
+                    "Idle: %d | " +
+                    "Waiting: %d%n",
+
+                    workerNodeId,
+
+                    writeDataSource.getPoolName(),
+
+                    writeBean.getTotalConnections(),
+
+                    writeBean.getActiveConnections(),
+
+                    writeBean.getIdleConnections(),
+
+                    writeBean
+                            .getThreadsAwaitingConnection()
+            );
+        }
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getWorkerNodeId() {
+        return workerNodeId;
+    }
+
     public void closeDataSource() {
 
-        if (readDataSource != null &&
-                !readDataSource.isClosed()) {
+        if (
+                readDataSource != null &&
+                !readDataSource.isClosed()
+        ) {
 
             readDataSource.close();
         }
 
-        if (writeDataSource != null &&
-                !writeDataSource.isClosed()) {
+        if (
+                writeDataSource != null &&
+                !writeDataSource.isClosed()
+        ) {
 
             writeDataSource.close();
         }
