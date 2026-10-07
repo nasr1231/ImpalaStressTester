@@ -1,151 +1,47 @@
-26/10/07 13:02:16 INFO  history.SingleEventLogFileWriter: [Thread-4]: Logging events to hdfs://master-vm-cdp01-uat-app-387066.hodomain.local:8020/user/spark/spark3ApplicationHistory/local-1791367334580.inprogress
-26/10/07 13:02:17 INFO  logging.DriverLogger$DfsAsyncWriter: [Thread-4]: Started driver log file sync to: /user/spark/driver3Logs/local-1791367334580_driver.log
-Traceback (most recent call last):
-  File "/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py", line 458, in <module>
-    kafka_rows.writeStream
-  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/streaming.py", line 1389, in start
-  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1321, in __call__
-  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/utils.py", line 190, in deco
-  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/protocol.py", line 326, in get_return_value
-py4j.protocol.Py4JJavaError: An error occurred while calling o296.start.
-: org.apache.hadoop.security.AccessControlException: Permission denied: user=rise37432, access=WRITE, inode="/":hdfs:supergroup:drwxr-xr-x
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.check(FSPermissionChecker.java:553)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermission(FSPermissionChecker.java:393)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermissionWithContext(FSPermissionChecker.java:417)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermission(FSPermissionChecker.java:296)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkPermission(FSDirectory.java:1951)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkPermission(FSDirectory.java:1932)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkAncestorAccess(FSDirectory.java:1891)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirMkdirOp.mkdirs(FSDirMkdirOp.java:60)
-        at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.mkdirs(FSNamesystem.java:3295)
-        at org.apache.hadoop.hdfs.server.namenode.NameNodeRpcServer.mkdirs(NameNodeRpcServer.java:1126)
-        at org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolServerSideTranslatorPB.mkdirs(ClientNamenodeProtocolServerSideTranslatorPB.java:735)
-        at org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos$ClientNamenodeProtocol$2.callBlockingMethod(ClientNamenodeProtocolProtos.java)
-        at org.apache.hadoop.ipc.ProtobufRpcEngine$Server$ProtoBufRpcInvoker.call(ProtobufRpcEngine.java:533)
-        at org.apache.hadoop.ipc.RPC$Server.call(RPC.java:1070)
-        at org.apache.hadoop.ipc.Server$RpcCall.run(Server.java:994)
-        at org.apache.hadoop.ipc.Server$RpcCall.run(Server.java:922)
-        at java.base/java.security.AccessController.doPrivileged(Native Method)
-        at java.base/javax.security.auth.Subject.doAs(Subject.java:423)
-        at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1899)
-        at org.apache.hadoop.ipc.Server$Handler.run(Server.java:2899)
+def nullable_capture(col):
+    trimmed = F.trim(col)
 
-        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
-        at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
-        at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
-        at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:490)
-        at org.apache.hadoop.ipc.RemoteException.instantiateException(RemoteException.java:121)
-        at org.apache.hadoop.ipc.RemoteException.unwrapRemoteException(RemoteException.java:88)
-        at org.apache.hadoop.hdfs.DFSClient.primitiveMkdir(DFSClient.java:2489)
-        at org.apache.hadoop.fs.Hdfs.mkdir(Hdfs.java:354)
-        at org.apache.hadoop.fs.FileContext$4.next(FileContext.java:809)
-        at org.apache.hadoop.fs.FileContext$4.next(FileContext.java:805)
-        at org.apache.hadoop.fs.FSLinkResolver.resolve(FSLinkResolver.java:90)
-        at org.apache.hadoop.fs.FileContext.mkdir(FileContext.java:812)
-        at org.apache.spark.sql.execution.streaming.FileContextBasedCheckpointFileManager.createCheckpointDirectory(CheckpointFileManager.scala:368)
-        at org.apache.spark.sql.execution.streaming.ResolveWriteToStream$.resolveCheckpointLocation(ResolveWriteToStream.scala:121)
-        at org.apache.spark.sql.execution.streaming.ResolveWriteToStream$$anonfun$apply$1.applyOrElse(ResolveWriteToStream.scala:42)
-        at org.apache.spark.sql.execution.streaming.ResolveWriteToStream$$anonfun$apply$1.applyOrElse(ResolveWriteToStream.scala:40)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.$anonfun$resolveOperatorsDownWithPruning$2(AnalysisHelper.scala:170)
-        at org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:176)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.$anonfun$resolveOperatorsDownWithPruning$1(AnalysisHelper.scala:170)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.allowInvokingTransformsInAnalyzer(AnalysisHelper.scala:323)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsDownWithPruning(AnalysisHelper.scala:168)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsDownWithPruning$(AnalysisHelper.scala:164)
-        at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsDownWithPruning(LogicalPlan.scala:30)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsWithPruning(AnalysisHelper.scala:99)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperatorsWithPruning$(AnalysisHelper.scala:96)
-        at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperatorsWithPruning(LogicalPlan.scala:30)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperators(AnalysisHelper.scala:76)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper.resolveOperators$(AnalysisHelper.scala:75)
-        at org.apache.spark.sql.catalyst.plans.logical.LogicalPlan.resolveOperators(LogicalPlan.scala:30)
-        at org.apache.spark.sql.execution.streaming.ResolveWriteToStream$.apply(ResolveWriteToStream.scala:40)
-        at org.apache.spark.sql.execution.streaming.ResolveWriteToStream$.apply(ResolveWriteToStream.scala:39)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$2(RuleExecutor.scala:211)
-        at scala.collection.LinearSeqOptimized.foldLeft(LinearSeqOptimized.scala:126)
-        at scala.collection.LinearSeqOptimized.foldLeft$(LinearSeqOptimized.scala:122)
-        at scala.collection.immutable.List.foldLeft(List.scala:91)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1(RuleExecutor.scala:208)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$execute$1$adapted(RuleExecutor.scala:200)
-        at scala.collection.immutable.List.foreach(List.scala:431)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.execute(RuleExecutor.scala:200)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.org$apache$spark$sql$catalyst$analysis$Analyzer$$executeSameContext(Analyzer.scala:227)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$execute$1(Analyzer.scala:223)
-        at org.apache.spark.sql.catalyst.analysis.AnalysisContext$.withNewAnalysisContext(Analyzer.scala:172)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.execute(Analyzer.scala:223)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.execute(Analyzer.scala:187)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.$anonfun$executeAndTrack$1(RuleExecutor.scala:179)
-        at org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:88)
-        at org.apache.spark.sql.catalyst.rules.RuleExecutor.executeAndTrack(RuleExecutor.scala:179)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:208)
-        at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:330)
-        at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:207)
-        at org.apache.spark.sql.execution.QueryExecution.$anonfun$analyzed$1(QueryExecution.scala:76)
-        at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:111)
-        at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:186)
-        at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:511)
-        at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:186)
-        at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:779)
-        at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:185)
-        at org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:76)
-        at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:74)
-        at org.apache.spark.sql.streaming.StreamingQueryManager.createQuery(StreamingQueryManager.scala:262)
-        at org.apache.spark.sql.streaming.StreamingQueryManager.startQuery(StreamingQueryManager.scala:326)
-        at org.apache.spark.sql.streaming.DataStreamWriter.startQuery(DataStreamWriter.scala:427)
-        at org.apache.spark.sql.streaming.DataStreamWriter.startInternal(DataStreamWriter.scala:364)
-        at org.apache.spark.sql.streaming.DataStreamWriter.start(DataStreamWriter.scala:249)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-        at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
-        at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
-        at py4j.Gateway.invoke(Gateway.java:282)
-        at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
-        at py4j.commands.CallCommand.execute(CallCommand.java:79)
-        at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
-        at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
-        at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.security.AccessControlException): Permission denied: user=rise37432, access=WRITE, inode="/":hdfs:supergroup:drwxr-xr-x
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.check(FSPermissionChecker.java:553)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermission(FSPermissionChecker.java:393)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermissionWithContext(FSPermissionChecker.java:417)
-        at org.apache.hadoop.hdfs.server.namenode.FSPermissionChecker.checkPermission(FSPermissionChecker.java:296)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkPermission(FSDirectory.java:1951)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkPermission(FSDirectory.java:1932)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirectory.checkAncestorAccess(FSDirectory.java:1891)
-        at org.apache.hadoop.hdfs.server.namenode.FSDirMkdirOp.mkdirs(FSDirMkdirOp.java:60)
-        at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.mkdirs(FSNamesystem.java:3295)
-        at org.apache.hadoop.hdfs.server.namenode.NameNodeRpcServer.mkdirs(NameNodeRpcServer.java:1126)
-        at org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolServerSideTranslatorPB.mkdirs(ClientNamenodeProtocolServerSideTranslatorPB.java:735)
-        at org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos$ClientNamenodeProtocol$2.callBlockingMethod(ClientNamenodeProtocolProtos.java)
-        at org.apache.hadoop.ipc.ProtobufRpcEngine$Server$ProtoBufRpcInvoker.call(ProtobufRpcEngine.java:533)
-        at org.apache.hadoop.ipc.RPC$Server.call(RPC.java:1070)
-        at org.apache.hadoop.ipc.Server$RpcCall.run(Server.java:994)
-        at org.apache.hadoop.ipc.Server$RpcCall.run(Server.java:922)
-        at java.base/java.security.AccessController.doPrivileged(Native Method)
-        at java.base/javax.security.auth.Subject.doAs(Subject.java:423)
-        at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1899)
-        at org.apache.hadoop.ipc.Server$Handler.run(Server.java:2899)
+    unquoted = F.regexp_replace(
+        trimmed,
+        r'^"(.*)"$',
+        r'$1',
+    )
 
-        at org.apache.hadoop.ipc.Client.getRpcResponse(Client.java:1597)
-        at org.apache.hadoop.ipc.Client.call(Client.java:1543)
-        at org.apache.hadoop.ipc.Client.call(Client.java:1440)
-        at org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke(ProtobufRpcEngine.java:233)
-        at org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke(ProtobufRpcEngine.java:118)
-        at com.sun.proxy.$Proxy31.mkdirs(Unknown Source)
-        at org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolTranslatorPB.mkdirs(ClientNamenodeProtocolTranslatorPB.java:666)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
-        at org.apache.hadoop.io.retry.RetryInvocationHandler.invokeMethod(RetryInvocationHandler.java:431)
-        at org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invokeMethod(RetryInvocationHandler.java:166)
-        at org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invoke(RetryInvocationHandler.java:158)
-        at org.apache.hadoop.io.retry.RetryInvocationHandler$Call.invokeOnce(RetryInvocationHandler.java:96)
-        at org.apache.hadoop.io.retry.RetryInvocationHandler.invoke(RetryInvocationHandler.java:362)
-        at com.sun.proxy.$Proxy32.mkdirs(Unknown Source)
-        at org.apache.hadoop.hdfs.DFSClient.primitiveMkdir(DFSClient.java:2487)
-        ... 69 more
+    unquoted = F.regexp_replace(
+        unquoted,
+        '""',
+        '"',
+    )
 
-[rise37432@cdp-utility-01-uat-web-387068 t24_generator]$
+    return F.when(
+        unquoted.isNull() | (unquoted == ""),
+        F.lit(None).cast("string"),
+    ).otherwise(unquoted)
+
+
+def required_xmlrecord(col):
+    trimmed = F.trim(col)
+
+    unquoted = F.regexp_replace(
+        trimmed,
+        r'^"(.*)"$',
+        r'$1',
+    )
+
+    return F.regexp_replace(
+        unquoted,
+        '""',
+        '"',
+    )
+
+
+
+
+grep -n "F.substring.*F.length" \
+/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py
+
+
+
+
+grep -n "F.substring" \
+/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py
