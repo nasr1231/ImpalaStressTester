@@ -1,19 +1,30 @@
-kafka-topics \
-  --bootstrap-server cdp-worker-04-uat-app-387081.hodomain.local:9092,cdp-worker-05-uat-app-387084.hodomain.local:9092 \
-  --create \
-  --topic T24.FBNK_MG_MORTGAGE \
-  --partitions 3 \
-  --replication-factor 3 \
-  --config retention.ms=1209600000
 
-
-kafka-topics \
-  --bootstrap-server cdp-worker-04-uat-app-387081.hodomain.local:9092,cdp-worker-05-uat-app-387084.hodomain.local:9092 \
-  --describe \
-  --topic T24.FBNK_MG_MORTGAGE
-
-
-"T24.FBNK_MG_MORTGAGE": {
-  "source_folder": "FBNK_MG_MORTGAGE",
-  "table": "FBNK_MG_MORTGAGE"
-}
+26/10/07 12:59:56 INFO  memory.MemoryStore: [Thread-4]: MemoryStore started with capacity 1048.8 MiB
+26/10/07 12:59:56 INFO  spark.SparkEnv: [Thread-4]: Registering OutputCommitCoordinator
+26/10/07 12:59:57 INFO  util.Utils: [Thread-4]: Successfully started service 'SparkUI' on port 4040.
+26/10/07 12:59:57 INFO  executor.Executor: [Thread-4]: Starting executor ID driver on host cdp-utility-01-uat-web-387068.hodomain.local
+26/10/07 12:59:57 INFO  executor.Executor: [Thread-4]: Starting executor with user classpath (userClassPathFirst = false): ''
+26/10/07 12:59:57 INFO  util.Utils: [Thread-4]: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 43233.
+26/10/07 12:59:57 INFO  netty.NettyBlockTransferService: [Thread-4]: Server created on cdp-utility-01-uat-web-387068.hodomain.local:43233
+26/10/07 12:59:57 INFO  storage.BlockManager: [Thread-4]: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+26/10/07 12:59:57 INFO  storage.BlockManagerMaster: [Thread-4]: Registering BlockManager BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 43233, None)
+26/10/07 12:59:57 INFO  storage.BlockManagerMasterEndpoint: [dispatcher-BlockManagerMaster]: Registering block manager cdp-utility-01-uat-web-387068.hodomain.local:43233 with 1048.8 MiB RAM, BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 43233, None)
+26/10/07 12:59:57 INFO  storage.BlockManagerMaster: [Thread-4]: Registered BlockManager BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 43233, None)
+26/10/07 12:59:57 INFO  storage.BlockManager: [Thread-4]: external shuffle service port = 7447
+26/10/07 12:59:57 INFO  storage.BlockManager: [Thread-4]: Initialized BlockManager: BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 43233, None)
+26/10/07 12:59:59 INFO  history.SingleEventLogFileWriter: [Thread-4]: Logging events to hdfs://master-vm-cdp01-uat-app-387066.hodomain.local:8020/user/spark/spark3ApplicationHistory/local-1791367197474.inprogress
+26/10/07 13:00:01 INFO  logging.DriverLogger$DfsAsyncWriter: [Thread-4]: Started driver log file sync to: /user/spark/driver3Logs/local-1791367197474_driver.log
+Traceback (most recent call last):
+  File "/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py", line 346, in <module>
+    .withColumn("XMLRECORD", required_xmlrecord(parts.getItem(9)))
+  File "/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py", line 239, in required_xmlrecord
+    F.substring(trimmed, 2, F.length(trimmed) - 2),
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/functions.py", line 3079, in substring
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/functions.py", line 85, in _invoke_function
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1313, in __call__
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1277, in _build_args
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1264, in _get_args
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_collections.py", line 510, in convert
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/column.py", line 560, in __iter__
+TypeError: Column is not iterable
+[rise37432@cdp-utility-01-uat-web-387068 t24_generator]$
