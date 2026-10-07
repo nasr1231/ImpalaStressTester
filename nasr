@@ -1,16 +1,238 @@
-{
-  "type": "record",
-  "name": "T24Envelope",
-  "namespace": "T24",
-  "fields": [
-    {"name":"table",     "type":["null","string"], "default":null},
-    {"name":"op_ts",     "type":["null","string"], "default":null},
-    {"name":"optype",    "type":["null","string"], "default":null},
-    {"name":"csn",       "type":["null","string"], "default":null},
-    {"name":"xid",       "type":["null","string"], "default":null},
-    {"name":"opseqno",   "type":["null","string"], "default":null},
-    {"name":"pos",       "type":["null","string"], "default":null},
-    {"name":"RECID",     "type":["null","string"], "default":null},
-    {"name":"XMLRECORD", "type":"string"}
-  ]
-}
+
+26/10/07 13:13:08 INFO  netty.NettyBlockTransferService: [Thread-4]: Server created on cdp-utility-01-uat-web-387068.hodomain.local:41097
+26/10/07 13:13:08 INFO  storage.BlockManager: [Thread-4]: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+26/10/07 13:13:08 INFO  storage.BlockManagerMaster: [Thread-4]: Registering BlockManager BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 41097, None)
+26/10/07 13:13:08 INFO  storage.BlockManagerMasterEndpoint: [dispatcher-BlockManagerMaster]: Registering block manager cdp-utility-01-uat-web-387068.hodomain.local:41097 with 1048.8 MiB RAM, BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 41097, None)
+26/10/07 13:13:08 INFO  storage.BlockManagerMaster: [Thread-4]: Registered BlockManager BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 41097, None)
+26/10/07 13:13:08 INFO  storage.BlockManager: [Thread-4]: external shuffle service port = 7447
+26/10/07 13:13:08 INFO  storage.BlockManager: [Thread-4]: Initialized BlockManager: BlockManagerId(driver, cdp-utility-01-uat-web-387068.hodomain.local, 41097, None)
+26/10/07 13:13:10 INFO  history.SingleEventLogFileWriter: [Thread-4]: Logging events to hdfs://master-vm-cdp01-uat-app-387066.hodomain.local:8020/user/spark/spark3ApplicationHistory/local-1791367988264.inprogress
+26/10/07 13:13:11 INFO  logging.DriverLogger$DfsAsyncWriter: [Thread-4]: Started driver log file sync to: /user/spark/driver3Logs/local-1791367988264_driver.log
+26/10/07 13:13:22 WARN  streaming.ResolveWriteToStream: [Thread-4]: spark.sql.adaptive.enabled is not supported in streaming DataFrames/Datasets and will be disabled.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 11.0 in stage 1.0 (TID 511)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 15.0 in stage 1.0 (TID 515)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 12.0 in stage 1.0 (TID 512)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 9.0 in stage 1.0 (TID 509)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 10.0 in stage 1.0 (TID 510)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 4.0 in stage 1.0 (TID 504)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 7.0 in stage 1.0 (TID 507)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 14.0 in stage 1.0 (TID 514)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 13.0 in stage 1.0 (TID 513)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 0.0 in stage 1.0 (TID 500)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 1.0 in stage 1.0 (TID 501)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 5.0 in stage 1.0 (TID 505)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 2.0 in stage 1.0 (TID 502)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 3.0 in stage 1.0 (TID 503)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 8.0 in stage 1.0 (TID 508)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:29 WARN  avro.AvroSerializer: [Executor task launch worker for task 6.0 in stage 1.0 (TID 506)]: Writing Avro files with non-nullable Avro schema and nullable catalyst schema will throw runtime exception if there is a record with null value.
+26/10/07 13:13:30 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:31 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:31 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:31 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:32 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:32 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:32 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:33 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:33 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:33 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:34 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:34 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:34 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:35 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:35 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:36 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:36 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:36 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:37 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:37 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:37 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:38 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:38 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:38 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:39 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:39 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:39 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:40 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:40 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:41 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:41 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:41 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:42 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:42 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:42 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:43 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:43 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:43 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:43 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:44 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:44 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:45 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:45 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:45 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:46 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:46 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:46 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:47 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:47 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:48 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:48 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:48 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:49 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:49 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:49 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:49 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:50 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:50 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:50 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:51 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:51 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:52 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+^CERROR:root:Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+RuntimeError: reentrant call inside <_io.BufferedReader name=3>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+ERROR:root:Exception while sending command.
+Traceback (most recent call last):
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/clientserver.py", line 511, in send_command
+    answer = smart_decode(self.stream.readline()[:-1])
+  File "/usr/lib64/python3.9/socket.py", line 716, in readinto
+    return self._sock.recv_into(b)
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/context.py", line 362, in signal_handler
+    self.cancelAllJobs()
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/context.py", line 1447, in cancelAllJobs
+    self._jsc.sc().cancelAllJobs()
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1321, in __call__
+    return_value = get_return_value(
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/utils.py", line 190, in deco
+    return f(*a, **kw)
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/protocol.py", line 334, in get_return_value
+    raise Py4JError(
+py4j.protocol.Py4JError: An error occurred while calling o56.sc
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/clientserver.py", line 539, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending or receiving
+Traceback (most recent call last):
+  File "/home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/gg_applier_spark_all.py", line 460, in <module>
+    query.awaitTermination()
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/streaming.py", line 107, in awaitTermination
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/java_gateway.py", line 1321, in __call__
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/pyspark.zip/pyspark/sql/utils.py", line 190, in deco
+  File "/opt/cloudera/parcels/SPARK3-3.3.0.3.3.7180.0-274-1.p0.31212967/lib/spark3/python/lib/py4j-0.10.9.5-src.zip/py4j/protocol.py", line 334, in get_return_value
+py4j.protocol.Py4JError: An error occurred while calling o295.awaitTermination
+26/10/07 13:13:52 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-05-uat-app-387084.hodomain.local:9092 (id: -2 rack: null) disconnected
+26/10/07 13:13:52 ERROR v2.WriteToDataSourceV2Exec: [stream execution thread for [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf]]: Data source write support org.apache.spark.sql.execution.streaming.sources.MicroBatchWrite@f609834 is aborting.
+26/10/07 13:13:52 ERROR v2.WriteToDataSourceV2Exec: [stream execution thread for [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf]]: Data source write support org.apache.spark.sql.execution.streaming.sources.MicroBatchWrite@f609834 aborted.
+^C26/10/07 13:13:52 WARN  clients.NetworkClient: [kafka-producer-network-thread | producer-1]: [Producer clientId=producer-1] Bootstrap broker cdp-worker-04-uat-app-387081.hodomain.local:9092 (id: -1 rack: null) disconnected
+26/10/07 13:13:52 ERROR streaming.MicroBatchExecution: [stream execution thread for [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf]]: Query [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf] terminated with error
+org.apache.spark.SparkException: Writing job aborted
+        at org.apache.spark.sql.errors.QueryExecutionErrors$.writingJobAbortedError(QueryExecutionErrors.scala:749) ~[spark-catalyst_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2TableWriteExec.writeWithV2(WriteToDataSourceV2Exec.scala:412) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2TableWriteExec.writeWithV2$(WriteToDataSourceV2Exec.scala:356) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.WriteToDataSourceV2Exec.writeWithV2(WriteToDataSourceV2Exec.scala:305) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.WriteToDataSourceV2Exec.run(WriteToDataSourceV2Exec.scala:316) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2CommandExec.result$lzycompute(V2CommandExec.scala:43) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2CommandExec.result(V2CommandExec.scala:43) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2CommandExec.executeCollect(V2CommandExec.scala:49) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.collectFromPlan(Dataset.scala:3868) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.$anonfun$collect$1(Dataset.scala:3120) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.$anonfun$withAction$2(Dataset.scala:3858) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:511) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.$anonfun$withAction$1(Dataset.scala:3856) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$6(SQLExecution.scala:109) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:169) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:95) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:779) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:64) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.withAction(Dataset.scala:3856) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.Dataset.collect(Dataset.scala:3120) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.$anonfun$runBatch$17(MicroBatchExecution.scala:663) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$6(SQLExecution.scala:109) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.withSQLConfPropagated(SQLExecution.scala:169) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.$anonfun$withNewExecutionId$1(SQLExecution.scala:95) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:779) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.SQLExecution$.withNewExecutionId(SQLExecution.scala:64) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.$anonfun$runBatch$16(MicroBatchExecution.scala:658) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.ProgressReporter.reportTimeTaken(ProgressReporter.scala:375) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.ProgressReporter.reportTimeTaken$(ProgressReporter.scala:373) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.StreamExecution.reportTimeTaken(StreamExecution.scala:68) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.runBatch(MicroBatchExecution.scala:658) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.$anonfun$runActivatedStream$2(MicroBatchExecution.scala:255) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23) ~[scala-library-2.12.15.jar:?]
+        at org.apache.spark.sql.execution.streaming.ProgressReporter.reportTimeTaken(ProgressReporter.scala:375) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.ProgressReporter.reportTimeTaken$(ProgressReporter.scala:373) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.StreamExecution.reportTimeTaken(StreamExecution.scala:68) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.$anonfun$runActivatedStream$1(MicroBatchExecution.scala:218) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.ProcessingTimeExecutor.execute(TriggerExecutor.scala:67) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.MicroBatchExecution.runActivatedStream(MicroBatchExecution.scala:212) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.StreamExecution.$anonfun$runStream$1(StreamExecution.scala:307) [spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23) ~[scala-library-2.12.15.jar:?]
+        at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:779) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.StreamExecution.org$apache$spark$sql$execution$streaming$StreamExecution$$runStream(StreamExecution.scala:285) [spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.streaming.StreamExecution$$anon$1.run(StreamExecution.scala:208) [spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+Caused by: org.apache.spark.SparkException: Job 1 cancelled because SparkContext was shut down
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1(DAGScheduler.scala:1188) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1$adapted(DAGScheduler.scala:1186) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at scala.collection.mutable.HashSet.foreach(HashSet.scala:79) ~[scala-library-2.12.15.jar:?]
+        at org.apache.spark.scheduler.DAGScheduler.cleanUpAfterSchedulerStop(DAGScheduler.scala:1186) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onStop(DAGScheduler.scala:2887) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.EventLoop.stop(EventLoop.scala:84) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.scheduler.DAGScheduler.stop(DAGScheduler.scala:2784) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.SparkContext.$anonfun$stop$11(SparkContext.scala:2095) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1484) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.SparkContext.stop(SparkContext.scala:2095) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.SparkContext.$anonfun$new$35(SparkContext.scala:660) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:214) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$2(ShutdownHookManager.scala:188) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23) ~[scala-library-2.12.15.jar:?]
+        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:2066) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$1(ShutdownHookManager.scala:188) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23) ~[scala-library-2.12.15.jar:?]
+        at scala.util.Try$.apply(Try.scala:213) ~[scala-library-2.12.15.jar:?]
+        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515) ~[?:?]
+        at java.util.concurrent.FutureTask.run(FutureTask.java:264) ~[?:?]
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128) ~[?:?]
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628) ~[?:?]
+        at java.lang.Thread.run(Thread.java:829) ~[?:?]
+        at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:952) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2228) ~[spark-core_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        at org.apache.spark.sql.execution.datasources.v2.V2TableWriteExec.writeWithV2(WriteToDataSourceV2Exec.scala:380) ~[spark-sql_2.12-3.3.0.3.3.7180.0-274.jar:3.3.0.3.3.7180.0-274]
+        ... 42 more
+26/10/07 13:13:52 WARN  netty.NettyRpcEnv: [stream execution thread for [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf]]: Ignored failure: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask@50cc2c77[Not completed, task = java.util.concurrent.Executors$RunnableAdapter@2c63f8ab[Wrapped task = org.apache.spark.rpc.netty.NettyRpcEnv$$anon$1@72f5681d]] rejected from java.util.concurrent.ScheduledThreadPoolExecutor@20dfcab[Terminated, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0]
+Exception in thread "stream execution thread for [id = b65561cc-78af-411c-859d-723712e06f42, runId = b029b4b5-294f-4824-9460-fe312930f5bf]" org.apache.spark.SparkException: Exception thrown in awaitResult:
+        at org.apache.spark.util.ThreadUtils$.awaitResult(ThreadUtils.scala:301)
+        at org.apache.spark.rpc.RpcTimeout.awaitResult(RpcTimeout.scala:75)
+        at org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:103)
+        at org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:87)
+        at org.apache.spark.sql.execution.streaming.state.StateStoreCoordinatorRef.deactivateInstances(StateStoreCoordinator.scala:119)
+        at org.apache.spark.sql.streaming.StreamingQueryManager.notifyQueryTermination(StreamingQueryManager.scala:406)
+        at org.apache.spark.sql.execution.streaming.StreamExecution.$anonfun$runStream$3(StreamExecution.scala:357)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at org.apache.spark.util.UninterruptibleThread.runUninterruptibly(UninterruptibleThread.scala:77)
+        at org.apache.spark.sql.execution.streaming.StreamExecution.org$apache$spark$sql$execution$streaming$StreamExecution$$runStream(StreamExecution.scala:338)
+        at org.apache.spark.sql.execution.streaming.StreamExecution$$anon$1.run(StreamExecution.scala:208)
+Caused by: org.apache.spark.rpc.RpcEnvStoppedException: RpcEnv already stopped.
+        at org.apache.spark.rpc.netty.Dispatcher.postMessage(Dispatcher.scala:176)
+        at org.apache.spark.rpc.netty.Dispatcher.postLocalMessage(Dispatcher.scala:144)
+        at org.apache.spark.rpc.netty.NettyRpcEnv.askAbortable(NettyRpcEnv.scala:242)
+        at org.apache.spark.rpc.netty.NettyRpcEndpointRef.askAbortable(NettyRpcEnv.scala:554)
+        at org.apache.spark.rpc.netty.NettyRpcEndpointRef.ask(NettyRpcEnv.scala:558)
+        at org.apache.spark.rpc.RpcEndpointRef.askSync(RpcEndpointRef.scala:102)
+        ... 8 more
