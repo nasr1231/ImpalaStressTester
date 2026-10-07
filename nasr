@@ -1,6 +1,10 @@
-curl --negotiate --user : \
-  -X POST \
-  -H "Accept: application/json" \
-  -F "file=@t24-envelope.avsc;type=application/json" \
-  -F "description=T24 Envelope schema" \
-  "https://master-vm-cdp01-uat-app-387066.hodomain.local:7790/api/v1/schemaregistry/schemas/T24Envelope/versions/upload"
+[rise37432@cdp-utility-01-uat-web-387068 t24_generator]$ curl --negotiate --user : -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{
+"type": "avro",
+"schemaGroup": "T24",
+"name": "T24Envelope",
+"description": "Server-T24Envelope",
+"compatibility": "BACKWARD",
+"validationLevel": "ALL",
+"evolve": true
+}' "https://master-vm-cdp01-uat-app-387066.hodomain.local:7790/api/v1/schemaregistry/schemas"
+{"responseCode":1113,"responseMessage":"Access denied. - User 'RISE37432' does not have [create] permission on SchemaMetadata{ schemaGroupName='T24', schemaMetadataName='T24Envelope' }"}[
