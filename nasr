@@ -1,84 +1,52 @@
-This time the 9-field mapping is working. The error has moved to only one thing: the content of field 9 is not reaching the XML parser as <...>.
+[rise37432@cdp-utility-01-uat-web-387068 t24_generator]$ ./register_schema.sh
+Validated AVSC: T24.Server-T24Envelope
 
-column 0 is the key clue. It means the first character of XMLRECORD itself is invalid XML — usually a leftover ", \, BOM/NUL, or another wrapper.
+============================================================
+KERBEROS LOGIN
+============================================================
+Principal : rise37432@TESTHODOMAIN.LOCAL
+Keytab    : /home/rise37432/rise37432.keytab
 
-So I don't want to guess another format. Run this exact command against the failing row; it uses the same split(";", 8) rule as our producer and shows exactly what field 9 contains:
+Ticket cache: FILE:/tmp/krb5cc_206621
+Default principal: rise37432@TESTHODOMAIN.LOCAL
 
-python3 - <<'PY'
-path = "/data/T24/0510/ACFBNK_ACCOUNT/T24_ACFBNK_ACCOUNT_20261005020246962.txt"
-line_no = 138
+Valid starting       Expires              Service principal
+10/07/2026 10:36:40  10/07/2026 20:36:40  krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL
+        renew until 10/14/2026 10:36:40
 
-with open(path, "r", encoding="utf-8", errors="replace") as f:
-    for n, line in enumerate(f, 1):
-        if n == line_no:
-            line = line.rstrip("\r\n")
-            parts = line.split(";", 8)
+============================================================
+SCHEMA REGISTRY
+============================================================
+Server      : http://master-vm-cdp01-uat-app-387066:7788
+Schema name : T24Envelope
+Schema file : /home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/t24-envelope.avsc
+Auth        : Kerberos/SPNEGO
 
-            print("FIELD COUNT:", len(parts))
+Checking direct Schema Registry connectivity...
+curl: (7) Failed to connect to master-vm-cdp01-uat-app-387066 port 7788: Connection refused
+[rise37432@cdp-utility-01-uat-web-387068 t24_generator]$ ./register_schema.sh
+Validated AVSC: T24.Server-T24Envelope
 
-            for i, v in enumerate(parts[:8], 1):
-                print("%d:" % i, repr(v))
+============================================================
+KERBEROS LOGIN
+============================================================
+Principal : rise37432@TESTHODOMAIN.LOCAL
+Keytab    : /home/rise37432/rise37432.keytab
 
-            if len(parts) == 9:
-                xml = parts[8]
-                print("\nFIELD 9 RAW LENGTH:", len(xml))
-                print("FIELD 9 FIRST 300 CHARS:")
-                print(repr(xml[:300]))
-                print("\nFIRST 30 CODEPOINTS:")
-                print([(c, ord(c)) for c in xml[:30]])
-            break
-PY
+Ticket cache: FILE:/tmp/krb5cc_206621
+Default principal: rise37432@TESTHODOMAIN.LOCAL
 
-I specifically need the output of:
+Valid starting       Expires              Service principal
+10/07/2026 10:37:02  10/07/2026 20:37:02  krbtgt/TESTHODOMAIN.LOCAL@TESTHODOMAIN.LOCAL
+        renew until 10/14/2026 10:37:02
 
-FIELD 9 FIRST 300 CHARS:
-...
+============================================================
+SCHEMA REGISTRY
+============================================================
+Server      : http://master-vm-cdp01-uat-app-387066:7788
+Schema name : T24Envelope
+Schema file : /home/rise37432/cnsmrlo-rvmp/nasr-dir/t24_generator/t24-envelope.avsc
+Auth        : Kerberos/SPNEGO
 
-The current error already proves that these are now parsed correctly:
-
-op_ts
-optype
-csn
-capture_ts
-xid
-opseqno
-pos
-RECID
-
-So do not change the 9-field layout again.
-
-Most likely, we'll find something like one of these:
-
-'"<row ...'
-
-or:
-
-'\\"<row ...'
-
-or:
-
-'\ufeff<row ...'
-
-or:
-
-'\x00<row ...'
-
-or possibly:
-
-'"<?xml version=""1.0"" ...'
-
-Each needs a slightly different normalization rule. Once you paste that repr(xml[:300]), I can fix the XML normalization exactly instead of introducing another assumption.
-
-Also run this for comparison on a row that passes validation, if you have one:
-
-python3 - <<'PY'
-path = "/data/T24/0510/ACFBNK_ACCOUNT/T24_ACFBNK_ACCOUNT_20261005020246962.txt"
-
-with open(path, "r", encoding="utf-8", errors="replace") as f:
-    for n, line in enumerate(f, 1):
-        if n in (137, 138, 139):
-            p = line.rstrip("\r\n").split(";", 8)
-            print(n, "fields=", len(p), "XML=", repr(p[8][:150]) if len(p) == 9 else "NO FIELD 9")
-PY
-
-Send me those three outputs. That will tell us whether line 138 has a special escape/wrapper or whether all production XML uses a representation our normalizer needs to handle.
+Checking direct Schema Registry connectivity...
+curl: (7) Failed to connect to master-vm-cdp01-uat-app-387066 port 7788: Connection refused
